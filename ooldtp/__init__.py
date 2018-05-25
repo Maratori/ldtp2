@@ -76,9 +76,9 @@ else:
 class _Method(xmlrpclib._Method):
     def __call__(self, *args, **kwargs):
         if _ldtp_debug:
-            logger.debug('%s(%s)' % (self.__name, \
-                                         ', '.join(map(repr, args) + ['%s=%s' % (k, repr(v)) \
-                                                                          for k, v in kwargs.items()])))
+            logger.debug('{}({})'.format(self.__name,
+                                         ', '.join(list(map(repr, args)) +
+                                                   ['{}={!r}'.format(k, v) for k, v in kwargs.items()])))
         return self.__send(self.__name, args[1:])
 
 class Transport(xmlrpclib.Transport):

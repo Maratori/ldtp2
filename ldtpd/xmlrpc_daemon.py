@@ -115,11 +115,9 @@ class XMLRPCLdtpd(Ldtpd, xmlrpc.XMLRPC, object):
                 self._cbRender(f, request)
             else:
                 if _ldtp_debug:
-                    debug_st = '%s(%s)' % \
-                        (functionPath,
-                         ', '.join(map(repr, args) + \
-                                       ['%s=%s' % (k, repr(v)) \
-                                            for k, v in kwargs.items()]))
+                    debug_st = '{}({})'.format(functionPath,
+                                               ', '.join(list(map(repr, args)) +
+                                                         ['{}={!r}'.format(k, v) for k, v in kwargs.items()]))
                     print(debug_st)
                     logger.debug(debug_st)
                 if _ldtp_debug_file:
