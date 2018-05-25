@@ -19,11 +19,10 @@ See 'COPYING' in the source distribution for more information.
 
 Headers in this file shall remain intact.
 """
-
-from distutils.core import setup
+from setuptools import setup
 
 setup(name="ldtp",
-      version="3.5.0",
+      version="3.5.1",
       description="Linux Desktop Testing Project Version 2",
       maintainer="Nagappan Alagappan",
       maintainer_email="nagappan@gmail.com",
