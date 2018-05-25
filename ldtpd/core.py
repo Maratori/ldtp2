@@ -66,8 +66,7 @@ from gi.repository import GLib
 
 from concurrent.futures import thread
 
-class Ldtpd(Utils, ComboBox, Table, Menu, PageTabList,
-            Text, Mouse, Generic, Value):
+class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
     """
     Core LDTP class.
     """
