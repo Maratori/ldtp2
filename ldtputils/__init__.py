@@ -18,9 +18,6 @@ See 'COPYING' in the source distribution for more information.
 
 Headers in this file shall remain intact.
 """
-import ldtp
-from ldtp import imagecapture
-import xml.dom.minidom
 
 def imagecompare(imgfile1, imgfile2):
     try:

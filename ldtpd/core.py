@@ -21,7 +21,6 @@ Headers in this file shall remain intact.
 """
 
 wnckModule=False
-from pyatspi import findDescendant, Registry
 import locale
 import subprocess
 try:
@@ -40,33 +39,32 @@ except:
     # Not all environments support wnck package
     pass
   gtk3=False
-from utils import Utils, ProcessStats
-from constants import abbreviated_roles
-from keypress_actions import KeyboardOp
-from waiters import ObjectExistsWaiter, GuiExistsWaiter, \
+from .utils import Utils, ProcessStats
+from .keypress_actions import KeyboardOp
+from .waiters import ObjectExistsWaiter, GuiExistsWaiter, \
     GuiNotExistsWaiter, ObjectNotExistsWaiter, NullWaiter, \
     MaximizeWindow, MinimizeWindow, UnmaximizeWindow, UnminimizeWindow, \
     ActivateWindow, CloseWindow
-from server_exception import LdtpServerException
+from .server_exception import LdtpServerException
 import os
 import re
-import sys
 import time
 import pyatspi
 import traceback
 from fnmatch import translate as glob_trans
 
-from menu import Menu
-from text import Text
-from mouse import Mouse
-from table import Table
-from value import Value
-from generic import Generic
-from combo_box import ComboBox
-from page_tab_list import PageTabList
+from .menu import Menu
+from .text import Text
+from .mouse import Mouse
+from .table import Table
+from .value import Value
+from .generic import Generic
+from .combo_box import ComboBox
+from .page_tab_list import PageTabList
+# noinspection PyUnresolvedReferences
 from gi.repository import GLib
 
-import thread
+from concurrent.futures import thread
 
 class Ldtpd(Utils, ComboBox, Table, Menu, PageTabList,
             Text, Mouse, Generic, Value):

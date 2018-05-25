@@ -20,12 +20,10 @@ Headers in this file shall remain intact.
 """
 
 import os
-import re
 import sys
 import time
 import signal
 import platform
-import traceback
 import subprocess
 from socket import error as SocketError
 from ldtp.log import logger
@@ -112,7 +110,10 @@ class Transport(xmlrpclib.Transport):
         # Add to the class, only if > python 2.5
         def make_connection(self, host):
             # create a HTTP connection object from a host descriptor
-            import httplib
+            try:
+                import httplib
+            except ImportError:
+                import http.client as httplib
             host, extra_headers, x509 = self.get_host_info(host)
             return httplib.HTTPConnection(host)
     ##

@@ -38,9 +38,9 @@ except:
   import gtk
   gtk3 = False
 from re import match as re_match
-from constants import abbreviated_roles
+from .constants import abbreviated_roles
 from fnmatch import translate as glob_trans
-from server_exception import LdtpServerException
+from .server_exception import LdtpServerException
 
 importStatGrab = False
 try:

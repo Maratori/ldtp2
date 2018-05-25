@@ -22,11 +22,14 @@ Headers in this file shall remain intact.
 import os
 import re
 import time
-import core
-from core import Ldtpd
 from twisted.web import xmlrpc
-import xmlrpclib
-from log import logger
+try:
+    import xmlrpclib
+except ImportError:
+    import xmlrpc.client as xmlrpclib
+
+from .core import Ldtpd
+from .log import logger
 
 if 'LDTP_COMMAND_DELAY' in os.environ:
     delay = os.environ['LDTP_COMMAND_DELAY']

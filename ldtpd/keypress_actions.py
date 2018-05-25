@@ -28,7 +28,7 @@ except:
 import pyatspi
 import subprocess
 
-from sequence_step import AtomicAction
+from .sequence_step import AtomicAction
 _ = lambda x: x
 
 # Highest granularity, define timing for every single press and release

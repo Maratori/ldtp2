@@ -20,8 +20,8 @@ Headers in this file shall remain intact.
 """
 
 import pyatspi 
-from utils import Utils
-from server_exception import LdtpServerException
+from .utils import Utils
+from .server_exception import LdtpServerException
 
 class LayeredPane(Utils):
     def _lp_selectitem(self, obj, item_name):

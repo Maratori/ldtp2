@@ -21,9 +21,9 @@ Headers in this file shall remain intact.
 
 class SignalParent:
     def __init__(self, parentpid):
-        from twisted import internet
+        from twisted.internet import reactor
         self.parentpid = parentpid
-        self.reactor = internet.reactor
+        self.reactor = reactor
 
     def send_later(self):
         self.reactor.callLater(1, self.send)
@@ -35,13 +35,12 @@ class SignalParent:
         os.kill(int(self.parentpid), signal.SIGUSR1)
 
 
-from xmlrpc_daemon import XMLRPCLdtpd
+from .xmlrpc_daemon import XMLRPCLdtpd
 def main(port=4118, parentpid=None, XMLRPCLdtpdFactory=lambda: XMLRPCLdtpd()):
     import os
     os.environ['NO_GAIL'] = '1'
     os.environ['NO_AT_BRIDGE'] = '1'
 
-    import twisted
     gtkVersion = None
     try:
         from gi.repository import Gtk

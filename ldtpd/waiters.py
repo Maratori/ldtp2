@@ -20,7 +20,7 @@ Headers in this file shall remain intact.
 """
 
 wnckModule = False
-from utils import Utils
+from .utils import Utils
 import re
 import time
 try:
@@ -43,7 +43,6 @@ except:
 import fnmatch
 import pyatspi
 import traceback
-import datetime
 
 _main_loop = None
 if not gtk3:

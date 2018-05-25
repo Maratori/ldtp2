@@ -25,25 +25,27 @@ import os
 import re
 import sys
 import time
-import state
 import types
 import atexit
 import signal
 import socket
-import thread
+from concurrent.futures import thread
 import logging
 import datetime
 import platform
 import tempfile
 import warnings
 import traceback
-import xmlrpclib
+try:
+    import xmlrpclib
+except ImportError:
+    import xmlrpc.client as xmlrpclib
 import subprocess
-from log import logger
+from .log import logger
 from base64 import b64decode
 from fnmatch import translate as glob_trans
 from socket import error as SocketError
-from client_exception import LdtpExecutionError, ERROR_CODE
+from .client_exception import LdtpExecutionError, ERROR_CODE
 
 LDTP_LOG_MEMINFO = 60
 LDTP_LOG_CPUINFO = 61
@@ -117,7 +119,10 @@ class Transport(xmlrpclib.Transport):
         # Add to the class, only if > python 2.5
         def make_connection(self, host):
             # create a HTTP connection object from a host descriptor
-            import httplib
+            try:
+                import httplib
+            except ImportError:
+                import http.client as httplib
             host, extra_headers, x509 = self.get_host_info(host)
             return httplib.HTTPConnection(host)
     ##
