@@ -694,7 +694,7 @@ class Utils:
         key_binding = ''
         try:
             iaction = obj.queryAction()
-            for j in xrange(iaction.nActions):
+            for j in range(iaction.nActions):
                 if iaction.getKeyBinding(j) != '':
                     key_binding = iaction.getKeyBinding(j)
                     break
@@ -818,7 +818,7 @@ class Utils:
             raise LdtpServerException(
                 'Object does not have an Action interface')
         else:
-            for i in xrange(iaction.nActions):
+            for i in range(iaction.nActions):
                 if self._ldtp_debug:
                     print(iaction.getName(i))
                 if re.match(action, iaction.getName(i), re.I):
