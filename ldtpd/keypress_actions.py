@@ -61,7 +61,7 @@ def _get_keyboard_keycodes():
                             stderr = subprocess.PIPE,
                             shell = True, close_fds = True).communicate()
   if output[0] != '':
-    output = output[0]
+    output = output[0].decode("utf-8")
     for line in output.split('\n'):
       if line.strip() == '':
         continue

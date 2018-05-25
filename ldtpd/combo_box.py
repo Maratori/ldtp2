@@ -677,7 +677,4 @@ class ComboBox(LayeredPane):
         # Return label by value, which is actually selected one
         # Preference to label_by rather than label
         text=_ldtpize_accessible_name[2] or _ldtpize_accessible_name[1]
-        try:
-            return unicode(text)
-        except UnicodeDecodeError:
-            return text
+        text

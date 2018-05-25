@@ -189,10 +189,7 @@ class Text(Utils):
             end=texti.characterCount
 
         text=texti.getText(start, end)
-        try:
-            return unicode(text)
-        except UnicodeDecodeError:
-            return text
+        text
 
     def inserttext(self, window_name, object_name, position, data):
         """
