@@ -20,39 +20,46 @@ Headers in this file shall remain intact.
 """
 
 wnckModule = False
-from .utils import Utils
 import re
 import time
+
+from .utils import Utils
+
 try:
-  # If we have gtk3+ gobject introspection, use that
-  from gi.repository import Wnck as wnck
-  from gi.repository import Gtk as gtk
-  from gi.repository import GObject as gobject
-  wnckModule = gtk3 = True
+    # If we have gtk3+ gobject introspection, use that
+    from gi.repository import Wnck as wnck
+    from gi.repository import Gtk as gtk
+    from gi.repository import GObject as gobject
+
+    wnckModule = gtk3 = True
 except:
-  # No gobject introspection, use gtk2 libwnck
-  gtk3 = False
-  import gtk
-  import gobject
-  try:
-    import wnck
-    wnckModule = True
-  except:
-    # Not all environments support wnck package
-    pass
+    # No gobject introspection, use gtk2 libwnck
+    gtk3 = False
+    import gtk
+    import gobject
+
+    try:
+        import wnck
+
+        wnckModule = True
+    except:
+        # Not all environments support wnck package
+        pass
 import fnmatch
 import pyatspi
 import traceback
 
 _main_loop = None
 if not gtk3:
-   _gtk_vers = gtk.ver
-   if _gtk_vers[0] <= 2 and _gtk_vers[1] <= 15:
-       # Required for SLED11
-      _main_loop = gobject.MainLoop()
+    _gtk_vers = gtk.ver
+    if _gtk_vers[0] <= 2 and _gtk_vers[1] <= 15:
+        # Required for SLED11
+        _main_loop = gobject.MainLoop()
+
 
 class Waiter(Utils):
     events = []
+
     def __init__(self, timeout):
         Utils.__init__(self)
         self.timer = None
@@ -64,96 +71,97 @@ class Waiter(Utils):
         self._timeout_count = 1
 
         try:
-          self.poll()
+            self.poll()
         except:
-          pass
+            pass
 
         if self.success or self.timeout == 0:
-          # Return the current state on success
-          # or timeout is 0
-          return self.success
+            # Return the current state on success
+            # or timeout is 0
+            return self.success
 
         try:
-          gobject.timeout_add_seconds(self.timeout_seconds,
-                                      self._timeout_cb)
-          if self.events:
-            pyatspi.Registry.registerEventListener(
-              self._event_cb, *self.events)
-          if _main_loop:
-            _main_loop.run()
-          else:
-            gtk.main()
-          if self.events:
-            pyatspi.Registry.deregisterEventListener(
-              self._event_cb, *self.events)
+            gobject.timeout_add_seconds(self.timeout_seconds,
+                                        self._timeout_cb)
+            if self.events:
+                pyatspi.Registry.registerEventListener(
+                    self._event_cb, *self.events)
+            if _main_loop:
+                _main_loop.run()
+            else:
+                gtk.main()
+            if self.events:
+                pyatspi.Registry.deregisterEventListener(
+                    self._event_cb, *self.events)
         except:
-          if self._ldtp_debug:
-            print(traceback.format_exc())
-          if self._ldtp_debug_file:
-            with open(self._ldtp_debug_file, "a") as fp:
-              fp.write(traceback.format_exc())
+            if self._ldtp_debug:
+                print(traceback.format_exc())
+            if self._ldtp_debug_file:
+                with open(self._ldtp_debug_file, "a") as fp:
+                    fp.write(traceback.format_exc())
         return self.success
 
     def _timeout_thread_cb(self, params):
-      # Thread callback takes params argument
-      # but gobject.timeout_add_seconds doesn't
-      self._timeout_cb()
+        # Thread callback takes params argument
+        # but gobject.timeout_add_seconds doesn't
+        self._timeout_cb()
 
     def _timeout_cb(self):
-        if self.success: # dispose of previous waiters.
+        if self.success:  # dispose of previous waiters.
             return False
         self._timeout_count += 1
         try:
-          self.poll()
+            self.poll()
         except:
-          if self._ldtp_debug:
-            print(traceback.format_exc())
-          if self._ldtp_debug_file:
-            with open(self._ldtp_debug_file, "a") as fp:
-              fp.write(traceback.format_exc())
+            if self._ldtp_debug:
+                print(traceback.format_exc())
+            if self._ldtp_debug_file:
+                with open(self._ldtp_debug_file, "a") as fp:
+                    fp.write(traceback.format_exc())
         if self._timeout_count * self.timeout_seconds > self.timeout or \
-               self.success:
+                self.success:
             try:
-              # Required for wnck functions
-              if _main_loop:
-                _main_loop.quit()
-              else:
-                if gtk.main_level():
-                  gtk.main_quit()
+                # Required for wnck functions
+                if _main_loop:
+                    _main_loop.quit()
+                else:
+                    if gtk.main_level():
+                        gtk.main_quit()
             except RuntimeError:
-              # In Mandriva RuntimeError exception is thrown
-              # If, gtk.main was already quit
-              pass
+                # In Mandriva RuntimeError exception is thrown
+                # If, gtk.main was already quit
+                pass
             return False
         return True
-    
+
     def poll(self):
         pass
 
     def _event_cb(self, event):
-      try:
-        self.event_cb(event)
-      except:
-        if self._ldtp_debug:
-          print(traceback.format_exc())
-        if self._ldtp_debug_file:
-          with open(self._ldtp_debug_file, "a") as fp:
-            fp.write(traceback.format_exc())
-      if self.success:
         try:
-          # Required for wnck functions
-          if _main_loop:
-            _main_loop.quit()
-          else:
-            if gtk.main_level():
-              gtk.main_quit()
-        except RuntimeError:
-          # In Mandriva RuntimeError exception is thrown
-          # If, gtk.main was already quit
-          pass
+            self.event_cb(event)
+        except:
+            if self._ldtp_debug:
+                print(traceback.format_exc())
+            if self._ldtp_debug_file:
+                with open(self._ldtp_debug_file, "a") as fp:
+                    fp.write(traceback.format_exc())
+        if self.success:
+            try:
+                # Required for wnck functions
+                if _main_loop:
+                    _main_loop.quit()
+                else:
+                    if gtk.main_level():
+                        gtk.main_quit()
+            except RuntimeError:
+                # In Mandriva RuntimeError exception is thrown
+                # If, gtk.main was already quit
+                pass
 
     def event_cb(self, event):
         pass
+
 
 class NullWaiter(Waiter):
     def __init__(self, return_value, timeout):
@@ -164,30 +172,31 @@ class NullWaiter(Waiter):
         Waiter.run(self)
         return self._return_value
 
+
 class MaximizeWindow(Waiter):
     def __init__(self, frame_name):
-      Waiter.__init__(self, 0)
-      self._frame_name = frame_name
+        Waiter.__init__(self, 0)
+        self._frame_name = frame_name
 
     def poll(self):
         while gtk.events_pending():
-          gtk.main_iteration()
+            gtk.main_iteration()
         if not gtk3:
-          screen = wnck.screen_get_default()
+            screen = wnck.screen_get_default()
         else:
-          screen = wnck.Screen.get_default()
+            screen = wnck.Screen.get_default()
         screen.force_update()
         window_list = screen.get_windows()
         for w in window_list:
             if self._frame_name:
                 current_window = w.get_name()
                 if re.search(
-                    fnmatch.translate(self._frame_name), current_window,
-                    re.U | re.M | re.L) \
-                    or re.search(fnmatch.translate(re.sub("(^frm)|(^dlg)", "",
-                                                          self._frame_name)),
-                                 re.sub(" *(\t*)|(\n*)", "", current_window),
-                                 re.U | re.M | re.L):
+                        fnmatch.translate(self._frame_name), current_window,
+                        re.U | re.M | re.L) \
+                        or re.search(fnmatch.translate(re.sub("(^frm)|(^dlg)", "",
+                                                              self._frame_name)),
+                                     re.sub(" *(\t*)|(\n*)", "", current_window),
+                                     re.U | re.M | re.L):
                     # If window name specified, then maximize just that window
                     w.maximize()
                     self.success = True
@@ -196,6 +205,7 @@ class MaximizeWindow(Waiter):
                 # Maximize all window
                 w.maximize()
                 self.success = True
+
 
 class MinimizeWindow(Waiter):
     def __init__(self, frame_name):
@@ -206,21 +216,21 @@ class MinimizeWindow(Waiter):
         while gtk.events_pending():
             gtk.main_iteration()
         if not gtk3:
-          screen = wnck.screen_get_default()
+            screen = wnck.screen_get_default()
         else:
-          screen = wnck.Screen.get_default()
+            screen = wnck.Screen.get_default()
         screen.force_update()
         window_list = screen.get_windows()
         for w in window_list:
             if self._frame_name:
                 current_window = w.get_name()
                 if re.search( \
-                    fnmatch.translate(self._frame_name), current_window,
-                    re.U | re.M | re.L) \
-                    or re.search(fnmatch.translate(re.sub("(^frm)|(^dlg)", "",
-                                                          self._frame_name)),
-                                 re.sub(" *(\t*)|(\n*)", "", current_window),
-                                 re.U | re.M | re.L):
+                        fnmatch.translate(self._frame_name), current_window,
+                        re.U | re.M | re.L) \
+                        or re.search(fnmatch.translate(re.sub("(^frm)|(^dlg)", "",
+                                                              self._frame_name)),
+                                     re.sub(" *(\t*)|(\n*)", "", current_window),
+                                     re.U | re.M | re.L):
                     # If window name specified, then minimize just that window
                     w.minimize()
                     self.success = True
@@ -229,6 +239,7 @@ class MinimizeWindow(Waiter):
                 # Minimize all window
                 w.minimize()
                 self.success = True
+
 
 class UnmaximizeWindow(Waiter):
     def __init__(self, frame_name):
@@ -239,21 +250,21 @@ class UnmaximizeWindow(Waiter):
         while gtk.events_pending():
             gtk.main_iteration()
         if not gtk3:
-          screen = wnck.screen_get_default()
+            screen = wnck.screen_get_default()
         else:
-          screen = wnck.Screen.get_default()
+            screen = wnck.Screen.get_default()
         screen.force_update()
         window_list = screen.get_windows()
         for w in window_list:
             if self._frame_name:
                 current_window = w.get_name()
                 if re.search( \
-                    fnmatch.translate(self._frame_name), current_window,
-                    re.U | re.M | re.L) \
-                    or re.search(fnmatch.translate(re.sub("(^frm)|(^dlg)", "",
-                                                          self._frame_name)),
-                                 re.sub(" *(\t*)|(\n*)", "", current_window),
-                                 re.U | re.M | re.L):
+                        fnmatch.translate(self._frame_name), current_window,
+                        re.U | re.M | re.L) \
+                        or re.search(fnmatch.translate(re.sub("(^frm)|(^dlg)", "",
+                                                              self._frame_name)),
+                                     re.sub(" *(\t*)|(\n*)", "", current_window),
+                                     re.U | re.M | re.L):
                     # If window name specified, then unmaximize just that window
                     w.unmaximize()
                     self.success = True
@@ -262,6 +273,7 @@ class UnmaximizeWindow(Waiter):
                 # Unmaximize all window
                 w.unmaximize()
                 self.success = True
+
 
 class UnminimizeWindow(Waiter):
     def __init__(self, frame_name):
@@ -272,21 +284,21 @@ class UnminimizeWindow(Waiter):
         while gtk.events_pending():
             gtk.main_iteration()
         if not gtk3:
-          screen = wnck.screen_get_default()
+            screen = wnck.screen_get_default()
         else:
-          screen = wnck.Screen.get_default()
+            screen = wnck.Screen.get_default()
         screen.force_update()
         window_list = screen.get_windows()
         for w in window_list:
             if self._frame_name:
                 current_window = w.get_name()
                 if re.search( \
-                    fnmatch.translate(self._frame_name), current_window,
-                    re.U | re.M | re.L) \
-                    or re.search(fnmatch.translate(re.sub("(^frm)|(^dlg)", "",
-                                                          self._frame_name)),
-                                 re.sub(" *(\t*)|(\n*)", "", current_window),
-                                 re.U | re.M | re.L):
+                        fnmatch.translate(self._frame_name), current_window,
+                        re.U | re.M | re.L) \
+                        or re.search(fnmatch.translate(re.sub("(^frm)|(^dlg)", "",
+                                                              self._frame_name)),
+                                     re.sub(" *(\t*)|(\n*)", "", current_window),
+                                     re.U | re.M | re.L):
                     # If window name specified, then unminimize just that window
                     w.unminimize(int(time.time()))
                     self.success = True
@@ -295,6 +307,7 @@ class UnminimizeWindow(Waiter):
                 # Unminimize all window
                 w.unminimize(int(time.time()))
                 self.success = True
+
 
 class ActivateWindow(Waiter):
     def __init__(self, frame_name):
@@ -305,27 +318,28 @@ class ActivateWindow(Waiter):
         while gtk.events_pending():
             gtk.main_iteration()
         if not gtk3:
-          screen = wnck.screen_get_default()
+            screen = wnck.screen_get_default()
         else:
-          screen = wnck.Screen.get_default()
+            screen = wnck.Screen.get_default()
         screen.force_update()
         window_list = screen.get_windows()
         for w in window_list:
             if self._frame_name:
                 current_window = w.get_name()
                 if re.search( \
-                    fnmatch.translate(self._frame_name), current_window,
-                    re.U | re.M | re.L) \
-                    or re.search(fnmatch.translate(re.sub("(^frm)|(^dlg)", "",
-                                                          self._frame_name)),
-                                 re.sub(" *(\t*)|(\n*)", "", current_window),
-                                 re.U | re.M | re.L):
+                        fnmatch.translate(self._frame_name), current_window,
+                        re.U | re.M | re.L) \
+                        or re.search(fnmatch.translate(re.sub("(^frm)|(^dlg)", "",
+                                                              self._frame_name)),
+                                     re.sub(" *(\t*)|(\n*)", "", current_window),
+                                     re.U | re.M | re.L):
                     # If window name specified, then activate just that window
                     w.activate(int(time.time()))
                     self.success = True
                     break
             else:
                 break
+
 
 class CloseWindow(Waiter):
     def __init__(self, frame_name):
@@ -336,9 +350,9 @@ class CloseWindow(Waiter):
         while gtk.events_pending():
             gtk.main_iteration()
         if not gtk3:
-          screen = wnck.screen_get_default()
+            screen = wnck.screen_get_default()
         else:
-          screen = wnck.Screen.get_default()
+            screen = wnck.Screen.get_default()
         # Added screen.force_update() based on
         # http://stackoverflow.com/questions/5794309/how-can-i-get-a-list-of-windows-with-wnck-using-pygi
         screen.force_update()
@@ -347,12 +361,12 @@ class CloseWindow(Waiter):
             if self._frame_name:
                 current_window = w.get_name()
                 if re.search( \
-                    fnmatch.translate(self._frame_name), current_window,
-                    re.U | re.M | re.L) \
-                    or re.search(fnmatch.translate(re.sub("(^frm)|(^dlg)", "",
-                                                          self._frame_name)),
-                                 re.sub(" *(\t*)|(\n*)", "", current_window),
-                                 re.U | re.M | re.L):
+                        fnmatch.translate(self._frame_name), current_window,
+                        re.U | re.M | re.L) \
+                        or re.search(fnmatch.translate(re.sub("(^frm)|(^dlg)", "",
+                                                              self._frame_name)),
+                                     re.sub(" *(\t*)|(\n*)", "", current_window),
+                                     re.U | re.M | re.L):
                     # If window name specified, then close just that window
                     w.close(int(time.time()))
                     self.success = True
@@ -362,31 +376,35 @@ class CloseWindow(Waiter):
                 w.close(int(time.time()))
                 self.success = True
 
+
 class GuiExistsWaiter(Waiter):
     events = ["window:create"]
+
     def __init__(self, frame_name, timeout):
         Waiter.__init__(self, timeout)
         self._frame_name = frame_name
-        self.top_level = None # Useful in subclasses
+        self.top_level = None  # Useful in subclasses
 
     def poll(self):
         gui, _window_name = self._get_window_handle(self._frame_name)
         self.success = bool(gui)
 
     def event_cb(self, event):
-      try:
-        if self._match_name_to_acc(self._frame_name, event.source):
-            self.top_level = event.source
-            self.success = True
-      except:
-        if self._ldtp_debug:
-          print(traceback.format_exc())
-        if self._ldtp_debug_file:
-          with open(self._ldtp_debug_file, "a") as fp:
-            fp.write(traceback.format_exc())
+        try:
+            if self._match_name_to_acc(self._frame_name, event.source):
+                self.top_level = event.source
+                self.success = True
+        except:
+            if self._ldtp_debug:
+                print(traceback.format_exc())
+            if self._ldtp_debug_file:
+                with open(self._ldtp_debug_file, "a") as fp:
+                    fp.write(traceback.format_exc())
+
 
 class GuiNotExistsWaiter(Waiter):
     events = ["window:destroy"]
+
     def __init__(self, frame_name, timeout):
         Waiter.__init__(self, timeout)
         self.top_level = None
@@ -397,50 +415,52 @@ class GuiNotExistsWaiter(Waiter):
         self.success = not bool(gui)
 
     def event_cb(self, event):
-      try:
-        if self._match_name_to_acc(self._frame_name, event.source):
-            self.success = True
-      except:
-        if self._ldtp_debug:
-          print(traceback.format_exc())
-        if self._ldtp_debug_file:
-          with open(self._ldtp_debug_file, "a") as fp:
-            fp.write(traceback.format_exc())
+        try:
+            if self._match_name_to_acc(self._frame_name, event.source):
+                self.success = True
+        except:
+            if self._ldtp_debug:
+                print(traceback.format_exc())
+            if self._ldtp_debug_file:
+                with open(self._ldtp_debug_file, "a") as fp:
+                    fp.write(traceback.format_exc())
+
 
 class ObjectExistsWaiter(GuiExistsWaiter):
-    def __init__(self, frame_name, obj_name, timeout, state = ''):
-      GuiExistsWaiter.__init__(self, frame_name, timeout)
-      self.timeout_seconds = 2
-      self._obj_name = obj_name
-      self._state = state
+    def __init__(self, frame_name, obj_name, timeout, state=''):
+        GuiExistsWaiter.__init__(self, frame_name, timeout)
+        self.timeout_seconds = 2
+        self._obj_name = obj_name
+        self._state = state
 
     def poll(self):
         try:
-          if self._obj_name and re.search(';', self._obj_name):
-            obj = self._get_menu_hierarchy(self._frame_name, self._obj_name)
-          else:
-            obj = self._get_object(self._frame_name, self._obj_name, False)
-          if self._state:
-            _state_inst = obj.getState()
-            _obj_state = _state_inst.getStates()
-            state = 'STATE_%s' % self._state.upper()
-            if (state in self._states and \
-                  self._states[state] in _obj_state) or \
-                  (state in self._states_old and \
-                     self._states_old[state] in _obj_state):
-              self.success = True
-          else:
-            self.success = True
+            if self._obj_name and re.search(';', self._obj_name):
+                obj = self._get_menu_hierarchy(self._frame_name, self._obj_name)
+            else:
+                obj = self._get_object(self._frame_name, self._obj_name, False)
+            if self._state:
+                _state_inst = obj.getState()
+                _obj_state = _state_inst.getStates()
+                state = 'STATE_%s' % self._state.upper()
+                if (state in self._states and \
+                    self._states[state] in _obj_state) or \
+                        (state in self._states_old and \
+                         self._states_old[state] in _obj_state):
+                    self.success = True
+            else:
+                self.success = True
         except:
             if self._ldtp_debug_file:
                 with open(self._ldtp_debug_file, "a") as fp:
                     fp.write(traceback.format_exc())
             if self._ldtp_debug:
-              print(traceback.format_exc())
+                print(traceback.format_exc())
 
     def event_cb(self, event):
-      GuiExistsWaiter.event_cb(self, event)
-      self.success = False
+        GuiExistsWaiter.event_cb(self, event)
+        self.success = False
+
 
 class ObjectNotExistsWaiter(GuiNotExistsWaiter):
     def __init__(self, frame_name, obj_name, timeout):
@@ -457,6 +477,7 @@ class ObjectNotExistsWaiter(GuiNotExistsWaiter):
             self.success = False
         except:
             self.success = True
+
 
 if __name__ == "__main__":
     waiter = ObjectExistsWaiter('frmCalculator', 'mnuEitanIsaacsonFoo', 0)

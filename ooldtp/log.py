@@ -2,12 +2,12 @@
 
 # This file is part of ATOMac.
 
-#@author: Eitan Isaacson <eitan@ascender.com>
-#@author: Nagappan Alagappan <nagappan@gmail.com>
-#@copyright: Copyright (c) 2009 Eitan Isaacson
-#@copyright: Copyright (c) 2009-13 Nagappan Alagappan
+# @author: Eitan Isaacson <eitan@ascender.com>
+# @author: Nagappan Alagappan <nagappan@gmail.com>
+# @copyright: Copyright (c) 2009 Eitan Isaacson
+# @copyright: Copyright (c) 2009-13 Nagappan Alagappan
 
-#http://ldtp.freedesktop.org
+# http://ldtp.freedesktop.org
 
 # ATOMac is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by the Free
@@ -23,8 +23,8 @@
 # St, Fifth Floor, Boston, MA 02110-1301 USA.
 """Log routines for LDTP"""
 
-from os import environ as env
 import logging
+from os import environ as env
 
 AREA = 'ldtp.client'
 ENV_LOG_LEVEL = 'LDTP_LOG_LEVEL'

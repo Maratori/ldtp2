@@ -20,9 +20,12 @@ Headers in this file shall remain intact.
 """
 
 import time
-import pyatspi 
-from .utils import Utils
+
+import pyatspi
+
 from .server_exception import LdtpServerException
+from .utils import Utils
+
 
 class Value(Utils):
     def setvalue(self, window_name, object_name, data):
@@ -432,7 +435,7 @@ class Value(Utils):
             if valuei.currentValue >= valuei.maximumValue:
                 raise LdtpServerException('Maximum limit reached')
             valuei.currentValue += 1.0
-            time.sleep(1.0/100)
+            time.sleep(1.0 / 100)
             flag = True
             i += 1
         if flag:
@@ -469,7 +472,7 @@ class Value(Utils):
             if valuei.currentValue <= valuei.minimumValue:
                 raise LdtpServerException('Maximum limit reached')
             valuei.currentValue -= 1.0
-            time.sleep(1.0/100)
+            time.sleep(1.0 / 100)
             flag = True
             i += 1
         if flag:
@@ -510,7 +513,7 @@ class Value(Utils):
             if valuei.currentValue >= valuei.maximumValue:
                 raise LdtpServerException('Maximum limit reached')
             valuei.currentValue += maxValue
-            time.sleep(1.0/100)
+            time.sleep(1.0 / 100)
             flag = True
             i += 1
         if flag:
@@ -551,7 +554,7 @@ class Value(Utils):
             if valuei.currentValue < valuei.minimumValue:
                 raise LdtpServerException('Minimum limit reached')
             valuei.currentValue -= minValue
-            time.sleep(1.0/100)
+            time.sleep(1.0 / 100)
             flag = True
             i += 1
         if flag:
@@ -592,7 +595,7 @@ class Value(Utils):
             if valuei.currentValue >= valuei.maximumValue:
                 raise LdtpServerException('Maximum limit reached')
             valuei.currentValue += max
-            time.sleep(1.0/100)
+            time.sleep(1.0 / 100)
             flag = True
             i += 1
         if flag:
@@ -633,7 +636,7 @@ class Value(Utils):
             if valuei.currentValue < valuei.minimumValue:
                 raise LdtpServerException('Minimum limit reached')
             valuei.currentValue -= min
-            time.sleep(1.0/100)
+            time.sleep(1.0 / 100)
             flag = True
             i += 1
         if flag:

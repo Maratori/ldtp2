@@ -19,6 +19,7 @@ See 'COPYING' in the source distribution for more information.
 Headers in this file shall remain intact.
 """
 
+
 def imagecompare(imgfile1, imgfile2):
     try:
         import ImageChops, Image
@@ -40,9 +41,9 @@ def imagecompare(imgfile1, imgfile2):
             seq += list(row)
 
         for i in range(0, imgdiffcrop.size[0] * imgdiffcrop.size[1] * 3, 3):
-            if seq[i] != 0 or seq[i+1] != 0 or seq[i+2] != 0:
+            if seq[i] != 0 or seq[i + 1] != 0 or seq[i + 2] != 0:
                 diffcount = diffcount + 1.0
-        
+
         diffImgLen = imgcompdiff.size[0] * imgcompdiff.size[1] * 1.0
         diffpercent = (diffcount * 100) / diffImgLen
         return diffpercent

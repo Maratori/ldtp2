@@ -17,8 +17,9 @@ See "COPYING" in the source distribution for more information.
 Headers in this file shall remain intact.
 '''
 
-import ldtp, ooldtp
-from time import sleep
+import ldtp
+import ooldtp
+
 ldtp.launchapp('gedit')
 
 frm = ooldtp.context('*gedit')

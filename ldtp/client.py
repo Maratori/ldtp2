@@ -20,14 +20,15 @@ Headers in this file shall remain intact.
 """
 
 import os
+import platform
+import signal
+import subprocess
 import sys
 import time
-import signal
-import platform
-import subprocess
 from socket import error as SocketError
-from ldtp.log import logger
+
 from ldtp.client_exception import LdtpExecutionError, ERROR_CODE
+from ldtp.log import logger
 
 try:
     import xmlrpclib
@@ -62,7 +63,8 @@ if 'LDTP_WINDOWS' in os.environ or sys.platform.find('win') != -1:
     else:
         _ldtp_windows_env = True
 else:
-   _ldtp_windows_env = False
+    _ldtp_windows_env = False
+
 
 class _Method(xmlrpclib._Method):
     def __call__(self, *args, **kwargs):
@@ -71,6 +73,7 @@ class _Method(xmlrpclib._Method):
                                          ', '.join(list(map(repr, args)) +
                                                    ['{}={!r}'.format(k, v) for k, v in kwargs.items()])))
         return self.__send(self.__name, args)
+
 
 class Transport(xmlrpclib.Transport):
     def _handle_signal(self, signum, frame):
@@ -89,7 +92,7 @@ class Transport(xmlrpclib.Transport):
                 cmd = 'start cmd /K CobraWinLDTP.exe'
             else:
                 cmd = 'CobraWinLDTP.exe'
-            subprocess.Popen(cmd, shell = True)
+            subprocess.Popen(cmd, shell=True)
             self._daemon = True
         elif platform.mac_ver()[0] != '':
             pycmd = 'import atomac.ldtpd; atomac.ldtpd.main(parentpid=%s)' % pid
@@ -99,6 +102,7 @@ class Transport(xmlrpclib.Transport):
             pycmd = 'import ldtpd; ldtpd.main(parentpid=%s)' % pid
             self._daemon = os.spawnlp(os.P_NOWAIT, 'python',
                                       'python', '-c', pycmd)
+
     # http://www.itkovian.net/base/transport-class-for-pythons-xml-rpc-lib/
     ##
     # Connect to server.
@@ -116,6 +120,7 @@ class Transport(xmlrpclib.Transport):
                 import http.client as httplib
             host, extra_headers, x509 = self.get_host_info(host)
             return httplib.HTTPConnection(host)
+
     ##
     # Send a complete request, and parse the response.
     #
@@ -136,7 +141,7 @@ class Transport(xmlrpclib.Transport):
                     return xmlrpclib.Transport.request(
                         self, host, handler, request_body, verbose=verbose)
                 if not _python3:
-  		    # Follwing implementation not supported in Python <= 2.6
+                    # Follwing implementation not supported in Python <= 2.6
                     h = self.make_connection(host)
                     if verbose:
                         h.set_debuglevel(1)
@@ -146,13 +151,13 @@ class Transport(xmlrpclib.Transport):
                     self.send_user_agent(h)
                     self.send_content(h, request_body)
                 else:
-                    h=self.send_request(host, handler, request_body, bool(verbose))
+                    h = self.send_request(host, handler, request_body, bool(verbose))
 
                 response = h.getresponse()
 
                 if response.status != 200:
                     raise xmlrpclib.ProtocolError(host + handler, response.status,
-                                        response.reason, response.msg.headers)
+                                                  response.reason, response.msg.headers)
 
                 payload = response.read()
                 parser, unmarshaller = self.getparser()
@@ -162,10 +167,10 @@ class Transport(xmlrpclib.Transport):
                 return unmarshaller.close()
             except SocketError as e:
                 if ((_ldtp_windows_env and e[0] == 10061) or \
-                        (hasattr(e, 'errno') and (e.errno == 111 or \
-                                                      e.errno == 101 or \
-                                                      e.errno == 61 or \
-                                                      e.errno == 146))) \
+                    (hasattr(e, 'errno') and (e.errno == 111 or \
+                                              e.errno == 101 or \
+                                              e.errno == 61 or \
+                                              e.errno == 146))) \
                         and 'localhost' in host:
                     if hasattr(self, 'close'):
                         # On Windows XP SP3 / Python 2.5, close doesn't exist
@@ -180,7 +185,7 @@ class Transport(xmlrpclib.Transport):
                         if _ldtp_windows_env:
                             time.sleep(5)
                         else:
-                            signal.alarm(15) # Wait 15 seconds for ldtpd
+                            signal.alarm(15)  # Wait 15 seconds for ldtpd
                             signal.pause()
                             # restore signal handlers
                             signal.alarm(0)
@@ -209,12 +214,13 @@ class Transport(xmlrpclib.Transport):
                 # If started by the current current, then terminate
                 # else, silently quit
                 subprocess.Popen('taskkill /F /IM CobraWinLDTP.exe',
-                                 shell = True, stdout = subprocess.PIPE,
-                                 stderr = subprocess.PIPE).communicate()
+                                 shell=True, stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE).communicate()
             else:
                 os.kill(self._daemon, signal.SIGKILL)
         except AttributeError:
             pass
+
 
 class LdtpClient(xmlrpclib.ServerProxy):
     def __init__(self, uri, encoding=None, verbose=0, use_datetime=0):
@@ -231,5 +237,6 @@ class LdtpClient(xmlrpclib.ServerProxy):
     def setHost(self, host):
         setattr(self, '_ServerProxy__host', host)
 
+
 _client = LdtpClient('http://%s:%s' % (_ldtp_server_addr, _ldtp_server_port),
-                     verbose = verbose)
+                     verbose=verbose)

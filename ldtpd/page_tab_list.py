@@ -18,9 +18,11 @@ See "COPYING" in the source distribution for more information.
 
 Headers in this file shall remain intact.
 """
-import pyatspi 
-from .utils import Utils
+import pyatspi
+
 from .server_exception import LdtpServerException
+from .utils import Utils
+
 
 class PageTabList(Utils):
     def selecttab(self, window_name, object_name, tab_name):
@@ -82,7 +84,7 @@ class PageTabList(Utils):
         self._grab_focus(obj)
         if tab_index < 0 or tab_index > obj.childCount:
             raise LdtpServerException('Unable to get page tab name,' \
-                                          ' invalid index')
+                                      ' invalid index')
 
         try:
             selectioni = obj.querySelection()
@@ -165,11 +167,11 @@ class PageTabList(Utils):
         self._grab_focus(obj)
         if tab_index < 0 or tab_index > obj.childCount:
             raise LdtpServerException('Unable to get page tab name,' \
-                                          ' invalid index')
+                                      ' invalid index')
         name = None
 
         try:
-            child = obj.getChildAtIndex(int (tab_index))
+            child = obj.getChildAtIndex(int(tab_index))
             name = child.name
         except NotImplementedError:
             raise LdtpServerException('Not selectable object.')

@@ -19,24 +19,24 @@ See 'COPYING' in the source distribution for more information.
 Headers in this file shall remain intact.
 """
 
+import atexit
+import datetime
+import logging
 import os
 import re
-import sys
-import time
-import atexit
 import socket
-import logging
-import datetime
+import sys
 import tempfile
-import warnings
 import threading
+import time
 import traceback
+import warnings
 from base64 import b64decode
 from fnmatch import translate as glob_trans
 
-path=path = os.path.dirname(__file__)
+path = path = os.path.dirname(__file__)
 if path == "":
-   path = "."
+    path = "."
 sys.path.append(path)
 
 from ldtp import state
@@ -52,11 +52,14 @@ _ldtp_windows_env = client._ldtp_windows_env
 if 'LDTP_DEBUG' in os.environ:
     _ldtp_debug = os.environ['LDTP_DEBUG']
 
+
 def setHost(host):
     client._client.setHost(host)
 
+
 def whoismyhost():
     return client._client._ServerProxy__host
+
 
 LDTP_LOG_MEMINFO = 60
 LDTP_LOG_CPUINFO = 61
@@ -65,6 +68,7 @@ logging.addLevelName(LDTP_LOG_CPUINFO, 'CPUINFO')
 
 # Add handler to root logger
 logger = logging.getLogger('')
+
 
 def addloghandler(handler):
     """
@@ -79,6 +83,7 @@ def addloghandler(handler):
     logger.addHandler(handler)
     return 1
 
+
 def removeloghandler(handler):
     """
     Remove custom log handler
@@ -92,7 +97,8 @@ def removeloghandler(handler):
     logger.removeHandler(handler)
     return 1
 
-def log(message, level = logging.DEBUG):
+
+def log(message, level=logging.DEBUG):
     """
     Logs the message in the root logger with the log level
     @param message: Message to be logged
@@ -109,7 +115,8 @@ def log(message, level = logging.DEBUG):
     logger.log(level, str(message))
     return 1
 
-def startlog(filename, overwrite = True):
+
+def startlog(filename, overwrite=True):
     """
     @param filename: Start logging on the specified file
     @type filename: string
@@ -148,6 +155,7 @@ def startlog(filename, overwrite = True):
 
     return 1
 
+
 def stoplog():
     """ Stop logging.
 
@@ -161,11 +169,13 @@ def stoplog():
         _file_logger = None
     return 1
 
+
 class PollLogs(threading.Thread):
     """
     Class to poll logs, NOTE: *NOT* for external use
     """
     global _file_logger
+
     def __init__(self):
         super(PollLogs, self).__init__()
         self.alive = True
@@ -175,19 +185,19 @@ class PollLogs(threading.Thread):
         Stop polling when destroying this class
         """
         try:
-           self.alive = False
+            self.alive = False
         except:
-           pass
+            pass
 
     def stop(self):
-       """
-       Stop the thread
-       """
-       try:
-          self.alive = False
-          self.join()
-       except:
-          pass
+        """
+        Stop the thread
+        """
+        try:
+            self.alive = False
+            self.join()
+        except:
+            pass
 
     def run(self):
         while self.alive:
@@ -238,10 +248,12 @@ class PollLogs(threading.Thread):
         log(message, level)
         return True
 
+
 def logFailures(*args):
     # Do nothing. For backward compatability
     warnings.warn('Use Mago framework - http://mago.ubuntu.com', DeprecationWarning)
     pass
+
 
 def _populateNamespace(d):
     for method in client._client.system.listMethods():
@@ -254,34 +266,36 @@ def _populateNamespace(d):
         d[local_name] = getattr(client._client, method)
         d[local_name].__doc__ = client._client.system.methodHelp(method)
 
+
 class PollEvents(threading.Thread):
     """
     Class to poll callback events, NOTE: *NOT* for external use
     """
+
     def __init__(self):
-       super(PollEvents, self).__init__()
-       self.alive = True
-       # Initialize callback dictionary
-       self._callback = {}
+        super(PollEvents, self).__init__()
+        self.alive = True
+        # Initialize callback dictionary
+        self._callback = {}
 
     def __del__(self):
         """
         Stop polling when destroying this class
         """
         try:
-           self.alive = False
+            self.alive = False
         except:
-           pass
+            pass
 
     def stop(self):
-       """
-       Stop the thread
-       """
-       try:
-          self.alive = False
-          self.join()
-       except:
-          pass
+        """
+        Stop the thread
+        """
+        try:
+            self.alive = False
+            self.join()
+        except:
+            pass
 
     def run(self):
         while self.alive:
@@ -314,9 +328,9 @@ class PollEvents(threading.Thread):
 
         # Event format:
         # window:create-Untitled Document 1 - gedit
-        event = event.split('-', 1) # Split first -
-        data = event[1] # Rest of data
-        event_type = event[0] # event type
+        event = event.split('-', 1)  # Split first -
+        data = event[1]  # Rest of data
+        event_type = event[0]  # event type
         # self._callback[name][0] - Event type
         # self._callback[name][1] - Callback function
         # self._callback[name][2] - Arguments to callback function
@@ -326,9 +340,9 @@ class PollEvents(threading.Thread):
             # Keyboard event
             if (event_type == "onwindowcreate" and \
                 re.match(glob_trans(name), data, re.M | re.U | re.L)) or \
-                (event_type != "onwindowcreate" and \
-                 self._callback[name][0] == event_type) or \
-                 event_type == 'kbevent':
+                    (event_type != "onwindowcreate" and \
+                     self._callback[name][0] == event_type) or \
+                    event_type == 'kbevent':
                 if event_type == 'kbevent':
                     # Special case
                     keys, modifiers = data.split('-')
@@ -361,8 +375,9 @@ class PollEvents(threading.Thread):
                 break
         return True
 
-def imagecapture(window_name = None, out_file = None, x = 0, y = 0,
-                 width = None, height = None):
+
+def imagecapture(window_name=None, out_file=None, x=0, y=0,
+                 width=None, height=None):
     """
     Captures screenshot of the whole desktop or given window
 
@@ -402,62 +417,112 @@ def imagecapture(window_name = None, out_file = None, x = 0, y = 0,
 
     return out_file
 
+
 def wait(timeout=5):
     return _remote_wait(timeout)
-def waittillguiexist(window_name, object_name = '',
-                     guiTimeOut = 30, state = ''):
+
+
+def waittillguiexist(window_name, object_name='',
+                     guiTimeOut=30, state=''):
     return _remote_waittillguiexist(window_name, object_name,
                                     guiTimeOut)
-def waittillguinotexist(window_name, object_name = '',
-                        guiTimeOut = 30, state = ''):
+
+
+def waittillguinotexist(window_name, object_name='',
+                        guiTimeOut=30, state=''):
     return _remote_waittillguinotexist(window_name, object_name,
                                        guiTimeOut)
-def guiexist(window_name, object_name = ''):
+
+
+def guiexist(window_name, object_name=''):
     return _remote_guiexist(window_name, object_name)
-def launchapp(cmd, args = [], delay = 0, env = 1, lang = "C"):
+
+
+def launchapp(cmd, args=[], delay=0, env=1, lang="C"):
     return _remote_launchapp(cmd, args, delay, env, lang)
-def hasstate(window_name, object_name, state, guiTimeOut = 0):
+
+
+def hasstate(window_name, object_name, state, guiTimeOut=0):
     return _remote_hasstate(window_name, object_name, state, guiTimeOut)
+
+
 def selectrow(window_name, object_name, row_text):
     return _remote_selectrow(window_name, object_name, row_text, False)
+
+
 def multiselect(window_name, object_name, row_text):
     return _remote_multiselect(window_name, object_name, row_text, False)
+
+
 def multiremove(window_name, object_name, row_text):
     return _remote_multiremove(window_name, object_name, row_text, False)
-def doesrowexist(window_name, object_name, row_text, partial_match = False):
+
+
+def doesrowexist(window_name, object_name, row_text, partial_match=False):
     return _remote_doesrowexist(window_name, object_name, row_text, partial_match)
-def getchild(window_name, child_name = '', role = '', parent = ''):
+
+
+def getchild(window_name, child_name='', role='', parent=''):
     return _remote_getchild(window_name, child_name, role, parent)
-def enterstring(window_name, object_name = '', data = ''):
+
+
+def enterstring(window_name, object_name='', data=''):
     return _remote_enterstring(window_name, object_name, data)
+
+
 def setvalue(window_name, object_name, data):
     return _remote_setvalue(window_name, object_name, float(data))
-def grabfocus(window_name, object_name = ''):
+
+
+def grabfocus(window_name, object_name=''):
     # On Linux just with window name, grab focus doesn't work
     # So, we can't make this call generic
     return _remote_grabfocus(window_name, object_name)
-def copytext(window_name, object_name, start, end = -1):
+
+
+def copytext(window_name, object_name, start, end=-1):
     return _remote_copytext(window_name, object_name, start, end)
-def cuttext(window_name, object_name, start, end = -1):
+
+
+def cuttext(window_name, object_name, start, end=-1):
     return _remote_cuttext(window_name, object_name, start, end)
-def deletetext(window_name, object_name, start, end = -1):
+
+
+def deletetext(window_name, object_name, start, end=-1):
     return _remote_deletetext(window_name, object_name, start, end)
-def startprocessmonitor(process_name, interval = 2):
+
+
+def startprocessmonitor(process_name, interval=2):
     return _remote_startprocessmonitor(process_name, interval)
-def gettextvalue(window_name, object_name, startPosition = 0, endPosition = 0):
+
+
+def gettextvalue(window_name, object_name, startPosition=0, endPosition=0):
     return _remote_gettextvalue(window_name, object_name, startPosition, endPosition)
-def getcellvalue(window_name, object_name, row_index, column = 0):
+
+
+def getcellvalue(window_name, object_name, row_index, column=0):
     return _remote_getcellvalue(window_name, object_name, row_index, column)
-def getcellsize(window_name, object_name, row_index, column = 0):
+
+
+def getcellsize(window_name, object_name, row_index, column=0):
     return _remote_getcellsize(window_name, object_name, row_index, column)
-def getobjectnameatcoords(waitTime = 0):
+
+
+def getobjectnameatcoords(waitTime=0):
     return _remote_getobjectnameatcoords(waitTime)
-def maximizewindow(window_name = ''):
+
+
+def maximizewindow(window_name=''):
     return _remote_maximizewindow(window_name)
-def minimizewindow(window_name = ''):
+
+
+def minimizewindow(window_name=''):
     return _remote_minimizewindow(window_name)
-def closewindow(window_name = ''):
+
+
+def closewindow(window_name=''):
     return _remote_closewindow(window_name)
+
 
 def onwindowcreate(window_name, fn_name, *args):
     """
@@ -478,6 +543,7 @@ def onwindowcreate(window_name, fn_name, *args):
     _pollEvents._callback[window_name] = ["onwindowcreate", fn_name, args]
     return _remote_onwindowcreate(window_name)
 
+
 def removecallback(window_name):
     """
     Remove registered callback on window create
@@ -493,6 +559,7 @@ def removecallback(window_name):
     if window_name in _pollEvents._callback:
         del _pollEvents._callback[window_name]
     return _remote_removecallback(window_name)
+
 
 def registerevent(event_name, fn_name, *args):
     """
@@ -513,6 +580,7 @@ def registerevent(event_name, fn_name, *args):
     _pollEvents._callback[event_name] = [event_name, fn_name, args]
     return _remote_registerevent(event_name)
 
+
 def deregisterevent(event_name):
     """
     Remove callback of registered event
@@ -527,6 +595,7 @@ def deregisterevent(event_name):
     if event_name in _pollEvents._callback:
         del _pollEvents._callback[event_name]
     return _remote_deregisterevent(event_name)
+
 
 def registerkbevent(keys, modifiers, fn_name, *args):
     """
@@ -548,6 +617,7 @@ def registerkbevent(keys, modifiers, fn_name, *args):
     _pollEvents._callback[event_name] = [event_name, fn_name, args]
     return _remote_registerkbevent(keys, modifiers)
 
+
 def deregisterkbevent(keys, modifiers):
     """
     Remove callback of registered event
@@ -564,6 +634,7 @@ def deregisterkbevent(keys, modifiers):
     if event_name in _pollEvents._callback:
         del _pollEvents._callback[event_name]
     return _remote_deregisterkbevent(keys, modifiers)
+
 
 def windowuptime(window_name):
     """
@@ -585,10 +656,11 @@ def windowuptime(window_name):
                                         int(start_time[2]), int(start_time[3]),
                                         int(start_time[4]), int(start_time[5]))
         _end_time = datetime.datetime(int(end_time[0]), int(end_time[1]),
-                                      int(end_time[2]),int(end_time[3]),
+                                      int(end_time[2]), int(end_time[3]),
                                       int(end_time[4]), int(end_time[5]))
         return _start_time, _end_time
     return None
+
 
 _populateNamespace(globals())
 _pollEvents = PollEvents()
@@ -598,12 +670,14 @@ _pollLogs = PollLogs()
 _pollLogs.daemon = True
 _pollLogs.start()
 
+
 @atexit.register
 def _stop_thread():
-   try:
-      _pollLogs.stop()
-      _pollEvents.stop()
-   except:
-      pass
+    try:
+        _pollLogs.stop()
+        _pollEvents.stop()
+    except:
+        pass
+
 
 atexit.register(client._client.kill_daemon)

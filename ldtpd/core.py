@@ -20,25 +20,29 @@ See 'COPYING' in the source distribution for more information.
 Headers in this file shall remain intact.
 """
 
-wnckModule=False
+wnckModule = False
 import locale
 import subprocess
+
 try:
-  # If we have gtk3+ gobject introspection, use that
-  from gi.repository import Wnck as wnck
-  from gi.repository import Gtk as gtk
-  from gi.repository import Gdk as gdk
-  wnckModule=gtk3=True
+    # If we have gtk3+ gobject introspection, use that
+    from gi.repository import Wnck as wnck
+    from gi.repository import Gtk as gtk
+    from gi.repository import Gdk as gdk
+
+    wnckModule = gtk3 = True
 except:
-  # No gobject introspection, use gtk2 libwnck
-  import gtk
-  try:
-    import wnck
-    wnckModule=True
-  except:
-    # Not all environments support wnck package
-    pass
-  gtk3=False
+    # No gobject introspection, use gtk2 libwnck
+    import gtk
+
+    try:
+        import wnck
+
+        wnckModule = True
+    except:
+        # Not all environments support wnck package
+        pass
+    gtk3 = False
 from .utils import Utils, ProcessStats
 from .keypress_actions import KeyboardOp
 from .waiters import ObjectExistsWaiter, GuiExistsWaiter, \
@@ -66,50 +70,52 @@ from gi.repository import GLib
 
 from concurrent.futures import thread
 
+
 class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
     """
     Core LDTP class.
     """
+
     def __init__(self):
         Utils.__init__(self)
         # Window up time and onwindowcreate events
-        self._events=["window:create", "window:destroy"]
+        self._events = ["window:create", "window:destroy"]
         # Registered keyboard events
-        self._kb_timestamp=None
-        self._kb_entries=[]
-        self._kb_modifiers=[]
+        self._kb_timestamp = None
+        self._kb_entries = []
+        self._kb_modifiers = []
         # User registered events
-        self._registered_events=[]
+        self._registered_events = []
         pyatspi.Registry.registerEventListener(self._event_cb, *self._events)
-        self._process_stats={}
+        self._process_stats = {}
 
     def __del__(self):
         if '_events' in dir(self):
             # De-register all registered events
-          try:
-            pyatspi.Registry.deregisterEventListener(self._event_cb, *self._events)
-            pyatspi.Registry.deregisterEventListener(self._registered_event_cb,
-                                                     *self._registered_events)
-          except AttributeError:
-            # Handle exception during cleanup
-            pass
+            try:
+                pyatspi.Registry.deregisterEventListener(self._event_cb, *self._events)
+                pyatspi.Registry.deregisterEventListener(self._registered_event_cb,
+                                                         *self._registered_events)
+            except AttributeError:
+                # Handle exception during cleanup
+                pass
         for key in self._process_stats.keys():
             # Stop all process monitoring instances
             self._process_stats[key].stop()
 
     def _registered_event_cb(self, event):
-      try:
-        if event and event.source and event.type:
-            abbrev_role, abbrev_name, label_by=self._ldtpize_accessible( \
-                event.source)
-            window_name='%s%s' % (abbrev_role, abbrev_name)
-            self._callback_event.append("%s-%s" % (event.type, window_name))
-      except:
-        if self._ldtp_debug:
-          print(traceback.format_exc())
-        if self._ldtp_debug_file:
-          with open(self._ldtp_debug_file, "a") as fp:
-            fp.write(traceback.format_exc())
+        try:
+            if event and event.source and event.type:
+                abbrev_role, abbrev_name, label_by = self._ldtpize_accessible( \
+                    event.source)
+                window_name = '%s%s' % (abbrev_role, abbrev_name)
+                self._callback_event.append("%s-%s" % (event.type, window_name))
+        except:
+            if self._ldtp_debug:
+                print(traceback.format_exc())
+            if self._ldtp_debug_file:
+                with open(self._ldtp_debug_file, "a") as fp:
+                    fp.write(traceback.format_exc())
 
     def _registered_kb_event_cb(self, event):
         if not event:
@@ -121,47 +127,47 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
             # repeated callbacks
             return
         # Store the current timestamp
-        self._kb_timestamp=event.timestamp
+        self._kb_timestamp = event.timestamp
         if event.modifiers in self._kb_modifiers and \
-               event.hw_code in self._kb_entries:
+                event.hw_code in self._kb_entries:
             self._callback_event.append("kbevent-%s-%d" % (event.event_string,
-                                                            event.modifiers))
+                                                           event.modifiers))
 
     def _event_cb(self, event):
-      try:
-        if event and event.type == "window:create" and event.source:
-            for window in self._callback:
-                if window and self._match_name_to_acc(window, event.source):
-                    self._callback_event.append("onwindowcreate-%s" % window)
-            abbrev_role, abbrev_name, label_by=self._ldtpize_accessible( \
-                event.source)
-            win_name='%s%s' % (abbrev_role, abbrev_name)
-            self._window_uptime[win_name]=[event.source_name,
-                                             time.strftime("%Y %m %d %H %M %S")]
-        elif event and event.type == "window:destroy" and event.source:
-            abbrev_role, abbrev_name, label_by=self._ldtpize_accessible( \
-                event.source)
-            win_name='%s%s' % (abbrev_role, abbrev_name)
-            if win_name in self._window_uptime:
-                self._window_uptime[win_name].append( \
-                    time.strftime("%Y %m %d %H %M %S"))
-      except:
-        if self._ldtp_debug:
-          print(traceback.format_exc())
-        if self._ldtp_debug_file:
-          with open(self._ldtp_debug_file, "a") as fp:
-            fp.write(traceback.format_exc())
+        try:
+            if event and event.type == "window:create" and event.source:
+                for window in self._callback:
+                    if window and self._match_name_to_acc(window, event.source):
+                        self._callback_event.append("onwindowcreate-%s" % window)
+                abbrev_role, abbrev_name, label_by = self._ldtpize_accessible( \
+                    event.source)
+                win_name = '%s%s' % (abbrev_role, abbrev_name)
+                self._window_uptime[win_name] = [event.source_name,
+                                                 time.strftime("%Y %m %d %H %M %S")]
+            elif event and event.type == "window:destroy" and event.source:
+                abbrev_role, abbrev_name, label_by = self._ldtpize_accessible( \
+                    event.source)
+                win_name = '%s%s' % (abbrev_role, abbrev_name)
+                if win_name in self._window_uptime:
+                    self._window_uptime[win_name].append( \
+                        time.strftime("%Y %m %d %H %M %S"))
+        except:
+            if self._ldtp_debug:
+                print(traceback.format_exc())
+            if self._ldtp_debug_file:
+                with open(self._ldtp_debug_file, "a") as fp:
+                    fp.write(traceback.format_exc())
 
     def appundertest(self, app_name):
-      """
-      Application under test
+        """
+        Application under test
 
-      @return: return 1 on success
-      @rtype: int
-      """
-      # For Windows / Mac compatibility
-      # Currently this api is not in use under Linux
-      return 1
+        @return: return 1 on success
+        @rtype: int
+        """
+        # For Windows / Mac compatibility
+        # Currently this api is not in use under Linux
+        return 1
 
     def getapplist(self):
         """
@@ -170,10 +176,10 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: list of appliction name of string type on success.
         @rtype: list
         """
-        app_list=[]
+        app_list = []
         for app in self._list_apps():
             try:
-                app=app[0] # Just use the application handle
+                app = app[0]  # Just use the application handle
                 if app.name != '<unknown>':
                     app_list.append(app.name)
             except LookupError:
@@ -192,24 +198,24 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: list of window names in LDTP format of string type on success.
         @rtype: list
         """
-        window_list=[]
-        window_type={}
+        window_list = []
+        window_type = {}
         for gui in self._list_guis():
             if not gui:
                 continue
-            window_name=self._ldtpize_accessible(gui)
+            window_name = self._ldtpize_accessible(gui)
             if window_name[1] == '':
                 if window_name[0] in window_type:
                     window_type[window_name[0]] += 1
                 else:
-                    window_type[window_name[0]]=0
-                tmp_name='%d' % window_type[window_name[0]]
+                    window_type[window_name[0]] = 0
+                tmp_name = '%d' % window_type[window_name[0]]
             else:
-                tmp_name=window_name[1]
-            w_name=window_name='%s%s' % (window_name[0], tmp_name)
-            index=1
+                tmp_name = window_name[1]
+            w_name = window_name = '%s%s' % (window_name[0], tmp_name)
+            index = 1
             while window_name in window_list:
-                window_name='%s%d' % (w_name, index)
+                window_name = '%s%d' % (w_name, index)
                 index += 1
             window_list.append(window_name)
         return window_list
@@ -225,11 +231,11 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         return True
 
     def handletablecell(self):
-        self._handle_table_cell=True
+        self._handle_table_cell = True
         return 1
 
     def unhandletablecell(self):
-        self._handle_table_cell=False
+        self._handle_table_cell = False
         return 1
 
     def delaycmdexec(self, delay=None):
@@ -242,7 +248,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: 1 on success
         @rtype: integer
         """
-        self._delaycmdexec=delay
+        self._delaycmdexec = delay
 
     def launchapp(self, cmd, args=[], delay=0, env=1, lang="C"):
         """
@@ -264,26 +270,26 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
 
         @raise LdtpServerException: When command fails
         """
-        os.environ['NO_GAIL']='0'
-        os.environ['NO_AT_BRIDGE']='0'
+        os.environ['NO_GAIL'] = '0'
+        os.environ['NO_AT_BRIDGE'] = '0'
         if env:
-            os.environ['GTK_MODULES']='gail:atk-bridge'
-            os.environ['GNOME_ACCESSIBILITY']='1'
-            os.environ['QT_LINUX_ACCESSIBILITY_ALWAYS_ON']='1'
+            os.environ['GTK_MODULES'] = 'gail:atk-bridge'
+            os.environ['GNOME_ACCESSIBILITY'] = '1'
+            os.environ['QT_LINUX_ACCESSIBILITY_ALWAYS_ON'] = '1'
         if lang:
-            os.environ['LANG']=lang
+            os.environ['LANG'] = lang
         try:
-            process=subprocess.Popen([cmd]+args, close_fds=True)
+            process = subprocess.Popen([cmd] + args, close_fds=True)
             # Let us wait so that the application launches
             try:
                 time.sleep(int(delay))
             except ValueError:
                 time.sleep(5)
-            thread.start_new_thread(process.wait,())
+            thread.start_new_thread(process.wait, ())
         except Exception as e:
             raise LdtpServerException(str(e))
-        os.environ['NO_GAIL']='1'
-        os.environ['NO_AT_BRIDGE']='1'
+        os.environ['NO_GAIL'] = '1'
+        os.environ['NO_AT_BRIDGE'] = '1'
         return process.pid
 
     def poll_events(self):
@@ -308,7 +314,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
 
         if not self._custom_logger.log_events:
             return ''
-        
+
         return self._custom_logger.log_events.pop()
 
     def startprocessmonitor(self, process_name, interval=2):
@@ -330,7 +336,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
             # If an instance already exist, then stop it
             self._process_stats[process_name].stop()
         # Create an instance of process stat
-        self._process_stats[process_name]=ProcessStats(process_name, interval)
+        self._process_stats[process_name] = ProcessStats(process_name, interval)
         # start monitoring the process
         self._process_stats[process_name].start()
         return 1
@@ -363,8 +369,8 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: list
         """
         # Create an instance of process stat
-        _stat_inst=ProcessStats(process_name)
-        _stat_list=[]
+        _stat_inst = ProcessStats(process_name)
+        _stat_list = []
         for i, procname in _stat_inst.get_cpu_memory_stat():
             # CPU percent returned with 14 decimal values
             # ex: 0.0281199122531, round it to 2 decimal values
@@ -385,12 +391,12 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: list
         """
         # Create an instance of process stat
-        _stat_inst=ProcessStats(process_name)
-        _stat_list=[]
+        _stat_inst = ProcessStats(process_name)
+        _stat_list = []
         for i, procname in _stat_inst.get_cpu_memory_stat():
             # Resident memory will be in bytes, to convert it to MB
             # divide it by 1024*1024
-            _stat_list.append(i['proc_resident'] / (1024*1024))
+            _stat_list.append(i['proc_resident'] / (1024 * 1024))
         return _stat_list
 
     def windowuptime(self, window_name):
@@ -409,15 +415,15 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         if window_name in self._window_uptime and \
                 len(self._window_uptime[window_name]) == 3:
             return '%s-%s' % (self._window_uptime[window_name][1],
-                                self._window_uptime[window_name][2])
+                              self._window_uptime[window_name][2])
         for window in self._window_uptime:
             if re.match(glob_trans(window_name), window,
                         re.M | re.U | re.L) or \
-                        re.match(glob_trans(window_name),
-                                 self._window_uptime[window][0],
-                                 re.M | re.U | re.L):
-                        return '%s-%s' % (self._window_uptime[window][1],
-                                          self._window_uptime[window][2])
+                    re.match(glob_trans(window_name),
+                             self._window_uptime[window][0],
+                             re.M | re.U | re.L):
+                return '%s-%s' % (self._window_uptime[window][1],
+                                  self._window_uptime[window][2])
         return ''
 
     def onwindowcreate(self, window_name):
@@ -432,7 +438,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
 
-        self._callback[window_name]=window_name
+        self._callback[window_name] = window_name
 
         return 1
 
@@ -505,13 +511,13 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
 
-        key_op=KeyboardOp()
-        key_vals=key_op.get_keyval_id(keys)
+        key_op = KeyboardOp()
+        key_vals = key_op.get_keyval_id(keys)
         if modifiers:
             self._kb_modifiers.append(modifiers)
         for key_val in key_vals:
             self._kb_entries.append(key_val.value)
-        masks=[mask for mask in pyatspi.allModifiers()]
+        masks = [mask for mask in pyatspi.allModifiers()]
         pyatspi.Registry.registerKeystrokeListener(self._registered_kb_event_cb,
                                                    mask=masks,
                                                    kind=(pyatspi.KEY_PRESSED_EVENT,))
@@ -530,14 +536,14 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
 
-        key_op=KeyboardOp()
-        key_vals=key_op.get_keyval_id(keys)
+        key_op = KeyboardOp()
+        key_vals = key_op.get_keyval_id(keys)
         if modifiers in self._kb_modifiers:
             del self._kb_modifiers[self._kb_modifiers.index(modifiers)]
         for key_val in key_vals:
             if key_val.value in self._kb_entries:
                 del self._kb_entries[self._kb_entries.index(key_val.value)]
-        masks=[mask for mask in pyatspi.allModifiers()]
+        masks = [mask for mask in pyatspi.allModifiers()]
         pyatspi.Registry.deregisterKeystrokeListener(self._registered_kb_event_cb,
                                                      mask=masks,
                                                      kind=(pyatspi.KEY_PRESSED_EVENT,))
@@ -571,8 +577,8 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         if not wnckModule:
-          raise LdtpServerException('Install python wnck module')
-        waiter=MaximizeWindow(window_name)
+            raise LdtpServerException('Install python wnck module')
+        waiter = MaximizeWindow(window_name)
 
         return int(waiter.run())
 
@@ -588,8 +594,8 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         if not wnckModule:
-          raise LdtpServerException('Install python wnck module')
-        waiter=MinimizeWindow(window_name)
+            raise LdtpServerException('Install python wnck module')
+        waiter = MinimizeWindow(window_name)
 
         return int(waiter.run())
 
@@ -605,8 +611,8 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         if not wnckModule:
-          raise LdtpServerException('Install python wnck module')
-        waiter=UnmaximizeWindow(window_name)
+            raise LdtpServerException('Install python wnck module')
+        waiter = UnmaximizeWindow(window_name)
 
         return int(waiter.run())
 
@@ -622,8 +628,8 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         if not wnckModule:
-          raise LdtpServerException('Install python wnck module')
-        waiter=UnminimizeWindow(window_name)
+            raise LdtpServerException('Install python wnck module')
+        waiter = UnminimizeWindow(window_name)
 
         return int(waiter.run())
 
@@ -639,8 +645,8 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         if not wnckModule:
-          raise LdtpServerException('Install python wnck module')
-        waiter=ActivateWindow(window_name)
+            raise LdtpServerException('Install python wnck module')
+        waiter = ActivateWindow(window_name)
 
         return int(waiter.run())
 
@@ -656,8 +662,8 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         if not wnckModule:
-          raise LdtpServerException('Install python wnck module')
-        waiter=CloseWindow(window_name)
+            raise LdtpServerException('Install python wnck module')
+        waiter = CloseWindow(window_name)
 
         return int(waiter.run())
 
@@ -676,37 +682,37 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         if object_name:
-            waiter=ObjectExistsWaiter(window_name, object_name, 0)
+            waiter = ObjectExistsWaiter(window_name, object_name, 0)
         else:
-            waiter=GuiExistsWaiter(window_name, 0)
+            waiter = GuiExistsWaiter(window_name, 0)
 
         return int(waiter.run())
 
     def guitimeout(self, timeout):
-      """
-      Change GUI timeout period, default 30 seconds.
+        """
+        Change GUI timeout period, default 30 seconds.
 
-      @param timeout: timeout in seconds
-      @type timeout: integer
+        @param timeout: timeout in seconds
+        @type timeout: integer
 
-      @return: 1 on success.
-      @rtype: integer
-      """
-      self._gui_timeout=timeout
-      return 1
+        @return: 1 on success.
+        @rtype: integer
+        """
+        self._gui_timeout = timeout
+        return 1
 
     def objtimeout(self, timeout):
-      """
-      Change object timeout period, default 5 seconds.
+        """
+        Change object timeout period, default 5 seconds.
 
-      @param timeout: timeout in seconds
-      @type timeout: integer
+        @param timeout: timeout in seconds
+        @type timeout: integer
 
-      @return: 1 on success.
-      @rtype: integer
-      """
-      self._obj_timeout=timeout
-      return 1
+        @return: 1 on success.
+        @rtype: integer
+        """
+        self._obj_timeout = timeout
+        return 1
 
     def waittillguiexist(self, window_name, object_name='',
                          guiTimeOut=30, state=''):
@@ -728,9 +734,9 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         if object_name:
-            waiter=ObjectExistsWaiter(window_name, object_name, guiTimeOut, state)
+            waiter = ObjectExistsWaiter(window_name, object_name, guiTimeOut, state)
         else:
-            waiter=GuiExistsWaiter(window_name, guiTimeOut)
+            waiter = GuiExistsWaiter(window_name, guiTimeOut)
 
         return int(waiter.run())
 
@@ -751,10 +757,10 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         if object_name:
-            waiter=\
+            waiter = \
                 ObjectNotExistsWaiter(window_name, object_name, guiTimeOut)
         else:
-            waiter=GuiNotExistsWaiter(window_name, guiTimeOut)
+            waiter = GuiNotExistsWaiter(window_name, guiTimeOut)
 
         return int(waiter.run())
 
@@ -772,11 +778,11 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: x, y, width, height on success.
         @rtype: list
         """
-        obj=self._get_object(window_name, object_name)
+        obj = self._get_object(window_name, object_name)
 
-        _coordinates=self._get_size(obj)
+        _coordinates = self._get_size(obj)
         return [_coordinates.x, _coordinates.y, \
-                    _coordinates.width, _coordinates.height]
+                _coordinates.width, _coordinates.height]
 
     def getallstates(self, window_name, object_name):
         """
@@ -793,18 +799,18 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: list
         """
         if re.search(';', object_name):
-            obj=self._get_menu_hierarchy(window_name, object_name)
+            obj = self._get_menu_hierarchy(window_name, object_name)
         else:
-            obj=self._get_object(window_name, object_name)
+            obj = self._get_object(window_name, object_name)
 
-        _state=obj.getState()
-        _current_state=_state.getStates()
-        _obj_states=[]
+        _state = obj.getState()
+        _current_state = _state.getStates()
+        _obj_states = []
         for state in _current_state:
             if self._state_names[state.real] == '':
-               val=self._old_state_names[state]
+                val = self._old_state_names[state]
             else:
-               val=self._state_names[state]
+                val = self._state_names[state]
             _obj_states.append(val)
         return _obj_states
 
@@ -827,15 +833,15 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         try:
-            waiter=\
+            waiter = \
                 ObjectExistsWaiter(window_name, object_name, guiTimeOut, state)
             return int(waiter.run())
         except:
-          if self._ldtp_debug_file:
-            with open(self._ldtp_debug_file, "a") as fp:
-              fp.write(traceback.format_exc())
-          if self._ldtp_debug:
-            print(traceback.format_exc())
+            if self._ldtp_debug_file:
+                with open(self._ldtp_debug_file, "a") as fp:
+                    fp.write(traceback.format_exc())
+            if self._ldtp_debug:
+                print(traceback.format_exc())
         return 0
 
     def grabfocus(self, window_name, object_name):
@@ -852,7 +858,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name)
+        obj = self._get_object(window_name, object_name)
         self._grab_focus(obj)
 
         return 1
@@ -871,7 +877,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name)
+        obj = self._get_object(window_name, object_name)
         self._grab_focus(obj)
 
         if obj.getRole() == pyatspi.ROLE_TOGGLE_BUTTON:
@@ -882,7 +888,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
             self._click_object(obj)
 
         return 1
-    
+
     def press(self, window_name, object_name):
         """
         Press item.
@@ -897,13 +903,13 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name)
+        obj = self._get_object(window_name, object_name)
         self._grab_focus(obj)
 
         self._click_object(obj, 'press')
 
         return 1
-    
+
     def check(self, window_name, object_name):
         """
         Check item.
@@ -918,7 +924,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name)
+        obj = self._get_object(window_name, object_name)
         self._grab_focus(obj)
 
         if self._check_state(obj, pyatspi.STATE_CHECKED) == False:
@@ -940,14 +946,14 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name)
+        obj = self._get_object(window_name, object_name)
         self._grab_focus(obj)
 
         if self._check_state(obj, pyatspi.STATE_CHECKED):
             self._click_object(obj, '(click|press|activate|uncheck)')
 
         return 1
-    
+
     def verifytoggled(self, window_name, object_name):
         """
         Verify toggle item toggled.
@@ -979,7 +985,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         try:
-            obj=self._get_object(window_name, object_name, False)
+            obj = self._get_object(window_name, object_name, False)
 
             return int(obj.getRole() == pyatspi.ROLE_PUSH_BUTTON)
         except:
@@ -1000,7 +1006,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         try:
-            obj=self._get_object(window_name, object_name, False)
+            obj = self._get_object(window_name, object_name, False)
 
             return int(self._check_state(obj, pyatspi.STATE_CHECKED))
         except:
@@ -1021,7 +1027,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         try:
-            obj=self._get_object(window_name, object_name)
+            obj = self._get_object(window_name, object_name)
 
             return obj.childCount
         except:
@@ -1043,19 +1049,19 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: 1 on success, exception on failure.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name)
+        obj = self._get_object(window_name, object_name)
 
         if obj.childCount <= 0:
-          raise LdtpServerException("Panel doesn't have any children")
+            raise LdtpServerException("Panel doesn't have any children")
         elif index > obj.childCount or index < 0:
-          raise LdtpServerException("Invalid index range")
-        child=obj.getChildAtIndex(index)
+            raise LdtpServerException("Invalid index range")
+        child = obj.getChildAtIndex(index)
         if not child:
-          raise LdtpServerException("Unable to get child at index")
+            raise LdtpServerException("Unable to get child at index")
         self._grab_focus(child)
         return 1
 
-    selectpanelindex=selectpanel
+    selectpanelindex = selectpanel
 
     def selectpanelname(self, window_name, object_name, name):
         """
@@ -1073,17 +1079,17 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: 1 on success, exception on failure.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name)
+        obj = self._get_object(window_name, object_name)
 
         if obj.childCount <= 0:
-          raise LdtpServerException("Panel doesn't have any children")
+            raise LdtpServerException("Panel doesn't have any children")
         for i in range(obj.childCount):
-          child=obj.getChildAtIndex(i)
-          if not child:
-            continue
-          if self._glob_match(name, child.name):
-            self._grab_focus(child)
-            return 1
+            child = obj.getChildAtIndex(i)
+            if not child:
+                continue
+            if self._glob_match(name, child.name):
+                self._grab_focus(child)
+                return 1
         raise LdtpServerException("Unable to select panel child based on name")
 
     def verifyuncheck(self, window_name, object_name):
@@ -1101,7 +1107,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         try:
-            obj=self._get_object(window_name, object_name, False)
+            obj = self._get_object(window_name, object_name, False)
 
             return int(not self._check_state(obj, pyatspi.STATE_CHECKED))
         except:
@@ -1122,7 +1128,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: integer
         """
         try:
-            obj=self._get_object(window_name, object_name, False)
+            obj = self._get_object(window_name, object_name, False)
 
             return int(self._check_state(obj, pyatspi.STATE_ENABLED))
         except:
@@ -1139,11 +1145,11 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: list of items in LDTP naming convention.
         @rtype: list
         """
-        obj_list=[]
-        gui, _window_name=self._get_window_handle(window_name, True)
+        obj_list = []
+        gui, _window_name = self._get_window_handle(window_name, True)
         if not gui:
             raise LdtpServerException('Unable to find window "%s"' % \
-                                          window_name)
+                                      window_name)
 
         for name in self._appmap_pairs(gui, _window_name).keys():
             obj_list.append(name)
@@ -1163,15 +1169,15 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: list of properties
         @rtype: list
         """
-        _window_handle, _window_name=\
+        _window_handle, _window_name = \
             self._get_window_handle(window_name, True)
         if not _window_handle:
             raise LdtpServerException('Unable to find window "%s"' % \
-                                          window_name)
-        appmap=self._appmap_pairs(_window_handle, _window_name)
+                                      window_name)
+        appmap = self._appmap_pairs(_window_handle, _window_name)
 
-        obj_info=self._get_object_in_window(appmap, object_name)
-        props=[]
+        obj_info = self._get_object_in_window(appmap, object_name)
+        props = []
         if obj_info:
             for obj_prop in obj_info.keys():
                 if obj_info[obj_prop]:
@@ -1194,18 +1200,18 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: property
         @rtype: string
         """
-        _window_handle, _window_name=\
+        _window_handle, _window_name = \
             self._get_window_handle(window_name, True)
         if not _window_handle:
             raise LdtpServerException('Unable to find window "%s"' % \
-                                          window_name)
-        appmap=self._appmap_pairs(_window_handle, _window_name)
+                                      window_name)
+        appmap = self._appmap_pairs(_window_handle, _window_name)
 
-        obj_info=self._get_object_in_window(appmap, object_name)
+        obj_info = self._get_object_in_window(appmap, object_name)
         if obj_info and prop in obj_info:
             return obj_info[prop]
         raise LdtpServerException('Unknown property "%s" in %s' % \
-                                      (prop, object_name))
+                                  (prop, object_name))
 
     def getchild(self, window_name, child_name='', role='', parent=''):
         """
@@ -1225,25 +1231,26 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: list of matched children names
         @rtype: list
         """
-        matches=[]
+        matches = []
         if role:
-            role=re.sub(' ', '_', role)
+            role = re.sub(' ', '_', role)
         if parent and (child_name or role):
-            _window_handle, _window_name=\
+            _window_handle, _window_name = \
                 self._get_window_handle(window_name, True)
             if not _window_handle:
                 raise LdtpServerException('Unable to find window "%s"' % \
-                                              window_name)
-            appmap=self._appmap_pairs(_window_handle, _window_name)
-            obj=self._get_object_in_window(appmap, parent)
-            obj_name=appmap[obj['key']]
+                                          window_name)
+            appmap = self._appmap_pairs(_window_handle, _window_name)
+            obj = self._get_object_in_window(appmap, parent)
+            obj_name = appmap[obj['key']]
+
             def _get_all_children_under_obj(obj, child_list):
                 if role and obj['class'] == role:
                     child_list.append(obj['key'])
                 elif child_name and self._match_name_to_appmap(child_name, obj):
                     child_list.append(obj['key'])
                 if obj:
-                    children=obj['children']
+                    children = obj['children']
                 if not children:
                     return child_list
                 for child in children:
@@ -1251,27 +1258,27 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
                         appmap[child],
                         child_list)
 
-            matches=_get_all_children_under_obj(obj, [])
+            matches = _get_all_children_under_obj(obj, [])
             if not matches:
                 if child_name:
-                    _name='name "%s" ' % child_name
+                    _name = 'name "%s" ' % child_name
                 if role:
-                    _role='role "%s" ' % role
+                    _role = 'role "%s" ' % role
                 if parent:
-                    _parent='parent "%s"' % parent
-                exception='Could not find a child %s%s%s' % (_name, _role, _parent)
+                    _parent = 'parent "%s"' % parent
+                exception = 'Could not find a child %s%s%s' % (_name, _role, _parent)
                 raise LdtpServerException(exception)
 
             return matches
 
-        _window_handle, _window_name=\
+        _window_handle, _window_name = \
             self._get_window_handle(window_name, True)
         if not _window_handle:
             raise LdtpServerException('Unable to find window "%s"' % \
-                                          window_name)
-        appmap=self._appmap_pairs(_window_handle, _window_name)
+                                      window_name)
+        appmap = self._appmap_pairs(_window_handle, _window_name)
         for name in appmap.keys():
-            obj=appmap[name]
+            obj = appmap[name]
             # When only role arg is passed
             if role and not child_name and obj['class'] == role:
                 matches.append(name)
@@ -1289,16 +1296,16 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
                 matches.append(name)
 
         if not matches:
-            _name=''
-            _role=''
-            _parent=''
+            _name = ''
+            _role = ''
+            _parent = ''
             if child_name:
-                _name='name "%s" ' % child_name
+                _name = 'name "%s" ' % child_name
             if role:
-                _role='role "%s" ' % role
+                _role = 'role "%s" ' % role
             if parent:
-                _parent='parent "%s"' % parent
-            exception='Could not find a child %s%s%s' % (_name, _role, _parent)
+                _parent = 'parent "%s"' % parent
+            exception = 'Could not find a child %s%s%s' % (_name, _role, _parent)
             raise LdtpServerException(exception)
 
         return matches
@@ -1312,11 +1319,11 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: 1
         @rtype: integer
         """
-        _window_handle, _window_name=\
+        _window_handle, _window_name = \
             self._get_window_handle(window_name, True)
         if not _window_handle:
             raise LdtpServerException('Unable to find window "%s"' % \
-                                          window_name)
+                                      window_name)
         self._appmap_pairs(_window_handle, _window_name, True)
         return 1
 
@@ -1336,7 +1343,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
             # this, as it hangs the desktop for the sleep time
             time.sleep(timeout)
             return 1
-        waiter=NullWaiter(1, timeout)
+        waiter = NullWaiter(1, timeout)
         return waiter.run()
 
     def getstatusbartext(self, window_name, object_name):
@@ -1380,7 +1387,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         """
         for gui in self._list_guis():
             if self._match_name_to_acc(window_name, gui):
-                size=self._get_size(gui)
+                size = self._get_size(gui)
                 return [size.x, size.y, size.width, size.height]
 
         raise LdtpServerException('Window "%s" does not exist' % window_name)
@@ -1401,23 +1408,23 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         """
         # Following lines from Accerciser, _getComponentAtCoords method
         # quick_select.py file
-        container=parent
-        inner_container=parent
+        container = parent
+        inner_container = parent
         while True:
-            container_role=container.getRole()
+            container_role = container.getRole()
             if container_role == pyatspi.ROLE_PAGE_TAB_LIST:
                 try:
-                    si=container.querySelection()
-                    container=si.getSelectedChild(0)[0]
+                    si = container.querySelection()
+                    container = si.getSelectedChild(0)[0]
                 except NotImplementedError:
                     pass
             try:
-                ci=container.queryComponent()
+                ci = container.queryComponent()
             except:
                 break
             else:
-                inner_container=container
-            container= ci.getAccessibleAtPoint(x, y, pyatspi.DESKTOP_COORDS)
+                inner_container = container
+            container = ci.getAccessibleAtPoint(x, y, pyatspi.DESKTOP_COORDS)
             if not container or container.queryComponent() == ci:
                 # The gecko bridge simply has getAccessibleAtPoint return itself
                 # if there are no further children
@@ -1440,31 +1447,31 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @rtype: (string, list)
         """
         if not wnckModule:
-          raise LdtpServerException('Install python wnck module')
+            raise LdtpServerException('Install python wnck module')
         self.wait(wait_time)
         # Following lines from Accerciser, _inspectUnderMouse method
         # quick_select.py file
         # Inspect accessible under mouse
         if gtk3:
-           display=gdk.get_default_root_window()
-           screen, x, y, flags=display.get_pointer()
+            display = gdk.get_default_root_window()
+            screen, x, y, flags = display.get_pointer()
         else:
-           display=gtk.gdk.Display(gtk.gdk.get_display())
-           screen, x, y, flags=display.get_pointer()
-           del screen # A workaround http://bugzilla.gnome.org/show_bug.cgi?id=593732
+            display = gtk.gdk.Display(gtk.gdk.get_display())
+            screen, x, y, flags = display.get_pointer()
+            del screen  # A workaround http://bugzilla.gnome.org/show_bug.cgi?id=593732
         # Bug in wnck, if the following 2 lines are not called
         # wnck returns empty list
         while gtk.events_pending():
             gtk.main_iteration()
         if gtk3:
-          wnck_screen=wnck.Screen.get_default()
+            wnck_screen = wnck.Screen.get_default()
         else:
-          wnck_screen=wnck.screen_get_default()
+            wnck_screen = wnck.screen_get_default()
         wnck_screen.force_update()
 
-        window_order=[(w.get_name(), w) \
+        window_order = [(w.get_name(), w) \
                         for w in wnck_screen.get_windows_stacked()]
-        tmp_window_order=[]
+        tmp_window_order = []
         for w in window_order:
             if w[0] != 'Untitled window':
                 # If not 'Untitled window', just assign it directly to
@@ -1472,19 +1479,19 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
                 tmp_window_order.append(w)
                 continue
             # Get PID
-            pid=w[1].get_pid()
+            pid = w[1].get_pid()
             if not pid:
                 # PID not found
                 continue
             # Get process name
-            ps=subprocess.Popen('ps ch -o %%c %d' % pid, shell=True,
+            ps = subprocess.Popen('ps ch -o %%c %d' % pid, shell=True,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
-            stdout, stderr=ps.communicate()
+            stdout, stderr = ps.communicate()
             # Strip \n
-            stdout=re.sub('\n', '', stdout)
+            stdout = re.sub('\n', '', stdout)
             # Get child_windows of current application
-            child_windows=[child_window.get_name() for child_window in \
+            child_windows = [child_window.get_name() for child_window in \
                              w[1].get_application().get_windows()]
             for app in self._list_apps():
                 if not app[0]:
@@ -1506,12 +1513,12 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
                         break
 
         # Assign back tmp_window_order to window_order, after all the iteration
-        window_order=tmp_window_order
+        window_order = tmp_window_order
 
-        top_window=(None, -1)
-        z_order=-1
+        top_window = (None, -1)
+        z_order = -1
         for gui in self._list_guis():
-            acc=self._getComponentAtCoords(gui, x, y)
+            acc = self._getComponentAtCoords(gui, x, y)
             if acc:
                 try:
                     for w in window_order:
@@ -1520,7 +1527,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
                             # also gui.name doesn't match wnck window name in some cases
                             # eg: Gedit Question dialog, when you try to close
                             # unsaved document
-                            z_order=window_order.index(w)
+                            z_order = window_order.index(w)
                             break
                 except ValueError:
                     # It's possibly a popup menu, so it would not be in our frame name
@@ -1532,21 +1539,21 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
                         pass
                 else:
                     if z_order > top_window[1]:
-                        top_window=(acc, z_order)
+                        top_window = (acc, z_order)
         if top_window[0]:
             # top_window[1] holds the window name and Wnck window info
             # [0] holds the window name
-            window_name=window_order[top_window[1]][0]
-            child_object=top_window[0]
-            child_list=self.getchild(window_name, child_object.name,
+            window_name = window_order[top_window[1]][0]
+            child_object = top_window[0]
+            child_list = self.getchild(window_name, child_object.name,
                                        child_object.getRoleName())
             if len(child_list) > 1:
                 # If child list is more than 1 child, then
                 # return the list to the caller
-                possible_child=child_list
+                possible_child = child_list
             else:
                 # else, just return the only element
-                possible_child=child_list[0]
+                possible_child = child_list[0]
             # NOTE: Bug, when a window title is empty
             # the accessibility window in the list matching the
             # x, y coordinates is returned !
@@ -1567,7 +1574,7 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         @return: access key in string format on success, else LdtpExecutionError on failure.
         @rtype: string
         """
-        obj=self._get_object(window_name, object_name)
+        obj = self._get_object(window_name, object_name)
         key_binding = ''
         try:
             iaction = obj.queryAction()
@@ -1578,5 +1585,5 @@ class Ldtpd(ComboBox, Table, Menu, PageTabList, Text, Mouse, Generic, Value):
         except NotImplementedError:
             pass
         if not key_binding:
-          raise LdtpServerException("No access key associated")
+            raise LdtpServerException("No access key associated")
         return key_binding

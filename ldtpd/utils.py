@@ -20,23 +20,27 @@ See "COPYING" in the source distribution for more information.
 Headers in this file shall remain intact.
 '''
 
-import os
-import re
-import time
 import fnmatch
 import logging
-import pyatspi
-import threading
-import traceback
 import logging.handlers
+import os
+import re
+import threading
+import time
+import traceback
+
+import pyatspi
+
 try:
-  # If we have gtk3+ gobject introspection, use that
-  from gi.repository import Gdk
-  gtk3 = True
+    # If we have gtk3+ gobject introspection, use that
+    from gi.repository import Gdk
+
+    gtk3 = True
 except:
-  # No gobject introspection, use gtk2
-  import gtk
-  gtk3 = False
+    # No gobject introspection, use gtk2
+    import gtk
+
+    gtk3 = False
 from re import match as re_match
 from .constants import abbreviated_roles
 from fnmatch import translate as glob_trans
@@ -45,15 +49,18 @@ from .server_exception import LdtpServerException
 importStatGrab = False
 try:
     import statgrab
+
     importStatGrab = True
 except ImportError:
     pass
+
 
 class LdtpCustomLog(logging.Handler):
     """
     Custom LDTP log, inherit logging.Handler and implement
     required API
     """
+
     def __init__(self):
         # Call base handler
         logging.Handler.__init__(self)
@@ -64,6 +71,7 @@ class LdtpCustomLog(logging.Handler):
         # Get the message and add to the list
         # Later the list element can be poped out
         self.log_events.append('%s-%s' % (record.levelname, record.getMessage()))
+
 
 # Add LdtpCustomLog handler
 logging.handlers.LdtpCustomLog = LdtpCustomLog
@@ -81,6 +89,7 @@ LDTP_LOG_CPUINFO = 61
 logging.addLevelName(LDTP_LOG_MEMINFO, 'MEMINFO')
 logging.addLevelName(LDTP_LOG_CPUINFO, 'CPUINFO')
 
+
 class ProcessStats(threading.Thread):
     """
     Capturing Memory and CPU Utilization statistics for an application and its related processes
@@ -94,7 +103,7 @@ class ProcessStats(threading.Thread):
     xstats.stop()
     """
 
-    def __init__(self, appname, interval = 2):
+    def __init__(self, appname, interval=2):
         """
         Start memory and CPU monitoring, with the time interval between
         each process scan
@@ -145,7 +154,7 @@ class ProcessStats(threading.Thread):
                 # divide it by 1024*1024
                 logger.log(LDTP_LOG_MEMINFO, '%s(%s) - %s' % \
                            (procname, str(i['pid']),
-                            str(i['proc_resident'] / (1024*1024))))
+                            str(i['proc_resident'] / (1024 * 1024))))
                 # CPU percent returned with 14 decimal values
                 # ex: 0.0281199122531, round it to 2 decimal values
                 # as 0.03
@@ -162,15 +171,17 @@ class ProcessStats(threading.Thread):
         self._stop = True
         self.running = False
 
+
 class Utils:
     cached_apps = None
+
     def __init__(self):
         lazy_load = True
         self._states = {}
         self._appmap = {}
         self._callback = {}
-        self._obj_timeout=5
-        self._gui_timeout=30
+        self._obj_timeout = 5
+        self._gui_timeout = 30
         self._states_old = {}
         self._logger = logger
         self._state_names = {}
@@ -197,9 +208,9 @@ class Utils:
             # its decided, whether force_remap is required or not
             # Commenting the following lines of code
             # as it sucks the execution time in at-spi2
-            #pyatspi.Registry.registerEventListener(self._obj_changed, 
+            # pyatspi.Registry.registerEventListener(self._obj_changed,
             #                                       'object:children-changed')
-            #pyatspi.Registry.registerEventListener(
+            # pyatspi.Registry.registerEventListener(
             #    self._obj_changed, 'object:property-change:accessible-name')
 
             Utils.cached_apps = list()
@@ -278,8 +289,8 @@ class Utils:
         try:
             # Proceed only for window destry and deactivate event
             if event and (event.type == "window:destroy" or \
-                              event.type == "window:deactivate") and \
-                              event.source:
+                          event.type == "window:deactivate") and \
+                    event.source:
                 abbrev_role, abbrev_name, label_by = self._ldtpize_accessible( \
                     event.source)
                 # LDTPized name
@@ -300,9 +311,9 @@ class Utils:
                         # window info from appmap, which have same title
                         if re.search('%s%s\d*$' % (abbrev_role, abbrev_name),
                                      win_name, re.M | re.U) or \
-                                     re.search('%s%s*$' % (abbrev_role, abbrev_name),
-                                               win_name, re.M | re.U):
-                                     del self._appmap[name]
+                                re.search('%s%s*$' % (abbrev_role, abbrev_name),
+                                          win_name, re.M | re.U):
+                            del self._appmap[name]
                 return
             cache = True
             if not self.cached_apps:
@@ -463,8 +474,8 @@ class Utils:
         except:
             label = ''
         return abbreviated_roles.get(role, 'ukn'), \
-            label, \
-            label_by
+               label, \
+               label_by
 
     def _glob_match(self, pattern, string):
         """
@@ -474,7 +485,7 @@ class Utils:
         return bool(re_match(glob_trans(pattern), string,
                              re.M | re.U | re.L))
 
-    def _match_name_to_acc(self, name, acc, classType = None):
+    def _match_name_to_acc(self, name, acc, classType=None):
         """
         Match given name with acc.name / acc.associate name
         and also class type
@@ -506,9 +517,9 @@ class Utils:
                 return 0
             if acc.name:
                 try:
-                    _acc_name="%s" % acc.name
+                    _acc_name = "%s" % acc.name
                 except UnicodeDecodeError:
-                    _acc_name=acc.name.decode('utf-8')
+                    _acc_name = acc.name.decode('utf-8')
             if acc.name and re.match(fnmatch.translate(name), _acc_name, re.M | re.U):
                 # Since, type already matched and now the given name
                 # and accessibile name matched, mission accomplished
@@ -522,10 +533,10 @@ class Utils:
         # ex: 'frmUnsavedDocument1-gedit' for Gedit application
         # frm - Frame, Window title - 'Unsaved Document 1 - gedit'
         try:
-           _object_name = '%s%s' % (_ldtpize_accessible_name[0],
+            _object_name = '%s%s' % (_ldtpize_accessible_name[0],
                                      _ldtpize_accessible_name[1])
         except UnicodeDecodeError:
-           _object_name = '%s%s' % (_ldtpize_accessible_name[0],
+            _object_name = '%s%s' % (_ldtpize_accessible_name[0],
                                      _ldtpize_accessible_name[1].decode('utf-8'))
         if self._glob_match(name, acc.name):
             # If given name match object name with regexp
@@ -574,7 +585,7 @@ class Utils:
     def _match_name_to_appmap(self, name, acc, obj_type=[]):
         if not name:
             return 0
-        is_obj_type=self._match_obj_type(acc['class'], obj_type)
+        is_obj_type = self._match_obj_type(acc['class'], obj_type)
         if not is_obj_type:
             return 0
         if self._glob_match(name, acc['key']):
@@ -674,9 +685,9 @@ class Utils:
                                       self.ldtpized_obj_index[abbrev_role])
         else:
             try:
-               ldtpized_name_base = u'%s%s' % (abbrev_role, abbrev_name)
+                ldtpized_name_base = u'%s%s' % (abbrev_role, abbrev_name)
             except UnicodeDecodeError:
-               ldtpized_name_base = u'%s%s' % (abbrev_role, abbrev_name.decode('utf-8'))
+                ldtpized_name_base = u'%s%s' % (abbrev_role, abbrev_name.decode('utf-8'))
             ldtpized_name = ldtpized_name_base
         i = 0
         while ldtpized_name in self.ldtpized_list:
@@ -712,16 +723,16 @@ class Utils:
         else:
             obj_index = '%s#%d' % (abbrev_role,
                                    self.ldtpized_obj_index[abbrev_role])
-        self.ldtpized_list[ldtpized_name] = {'key' : ldtpized_name,
-                                             'parent' : parent,
-                                             'class' : obj.getRoleName().replace(' ', '_'),
-                                             'child_index' : child_index,
-                                             'children' : '',
-                                             'obj_index' : obj_index,
-                                             'label' : obj.name,
-                                             'label_by' : label_by,
-                                             'description' : obj.description,
-                                             'key_binding' : key_binding
+        self.ldtpized_list[ldtpized_name] = {'key': ldtpized_name,
+                                             'parent': parent,
+                                             'class': obj.getRoleName().replace(' ', '_'),
+                                             'child_index': child_index,
+                                             'children': '',
+                                             'obj_index': obj_index,
+                                             'label': obj.name,
+                                             'label_by': label_by,
+                                             'description': obj.description,
+                                             'key_binding': key_binding
                                              }
         return ldtpized_name
 
@@ -738,14 +749,14 @@ class Utils:
                     continue
                 try:
                     if not self._handle_table_cell and \
-                           child.getRole() == pyatspi.ROLE_TABLE_CELL:
+                            child.getRole() == pyatspi.ROLE_TABLE_CELL:
                         break
                 except:
                     # Some object bailed out
                     continue
                 self._populate_appmap(child, parent, index)
 
-    def _appmap_pairs(self, gui, window_name, force_remap = False):
+    def _appmap_pairs(self, gui, window_name, force_remap=False):
         self.ldtpized_list = {}
         self.ldtpized_obj_index = {}
         if not force_remap:
@@ -783,7 +794,7 @@ class Utils:
         return self.ldtpized_list
 
     def _get_menu_hierarchy(self, window_name, object_name,
-                            strict_hierarchy = False, wait = True):
+                            strict_hierarchy=False, wait=True):
         _menu_hierarchy = re.split(';', object_name)
         if strict_hierarchy and len(_menu_hierarchy) <= 1:
             # If strict_hierarchy is set and _menu_hierarchy doesn't have
@@ -811,7 +822,7 @@ class Utils:
                     'Menu item "%s" doesn\'t exist in hierarchy' % _menu)
         return obj
 
-    def _click_object(self, obj, action = '(click|press|activate)'):
+    def _click_object(self, obj, action='(click|press|activate)'):
         try:
             iaction = obj.queryAction()
         except NotImplementedError:
@@ -855,9 +866,9 @@ class Utils:
         @rtype: object, string
         """
         if wait:
-            retry=self._gui_timeout
+            retry = self._gui_timeout
         else:
-            retry=1
+            retry = 1
         for i in range(retry):
             gui, name = self._internal_get_window_handle(window_name)
             if gui:
@@ -946,16 +957,16 @@ class Utils:
         return None, None
 
     def _get_object(self, window_name, obj_name, wait=True,
-                    obj_type = []):
+                    obj_type=[]):
         _window_handle, _window_name = \
             self._get_window_handle(window_name, wait)
         if not _window_handle:
             raise LdtpServerException('Unable to find window "%s"' % \
-                                              window_name)
+                                      window_name)
         if wait:
-            retry=self._obj_timeout
+            retry = self._obj_timeout
         else:
-            retry=1
+            retry = 1
         for i in range(retry):
             obj = self._internal_get_object(_window_handle, _window_name,
                                             obj_name, obj_type)
@@ -972,16 +983,18 @@ class Utils:
         obj = self._get_object_in_window(appmap, obj_name, obj_type)
         if not obj:
             appmap = self._appmap_pairs(window_handle, window_name,
-                                        force_remap = True)
+                                        force_remap=True)
             obj = self._get_object_in_window(appmap, obj_name, obj_type)
         if not obj:
             return None
+
         def _self_get_object(window, obj_name, obj):
             """
             window: Window handle in pyatspi format
             obj_name: In appmap format
             obj: Current object hash index in appmap
             """
+
             def _traverse_parent(gui, window_name, obj, parent_list):
                 """
                 Traverse from current object to parent object, this is done
@@ -1025,7 +1038,7 @@ class Utils:
                             # Traversing object role and appmap role doesn't match
                             if self._ldtp_debug:
                                 print("Traversing object role and appmap role " \
-                                          "doesn't match", obj.getRoleName(), _appmap_role)
+                                      "doesn't match", obj.getRoleName(), _appmap_role)
                             return None
                         break
                     obj = tmp_obj
@@ -1033,14 +1046,15 @@ class Utils:
                         # Traversing object role and appmap role doesn't match
                         if self._ldtp_debug:
                             print("Traversing object role and appmap role " \
-                                      "doesn't match", obj.getRoleName(), _appmap_role)
+                                  "doesn't match", obj.getRoleName(), _appmap_role)
                         return None
             return obj
+
         _current_obj = _self_get_object(window_name, obj_name, obj)
         if not _current_obj:
             # retry once, before giving up
             appmap = self._appmap_pairs(window_handle, window_name,
-                                        force_remap = True)
+                                        force_remap=True)
             obj = self._get_object_in_window(appmap, obj_name, obj_type)
             if not obj:
                 return None
@@ -1065,12 +1079,12 @@ class Utils:
 
         if column_index < 0 or column_index > tablei.nColumns:
             raise LdtpServerException('Column index out of range: %d' % \
-                                          column_index)
+                                      column_index)
 
         cell = tablei.getAccessibleAt(row_index, column_index)
         if not cell:
             raise LdtpServerException('Unable to access table cell on ' \
-                                          'the given row and column index')
+                                      'the given row and column index')
         return cell
 
     def _check_state(self, obj, object_state):
@@ -1083,7 +1097,7 @@ class Utils:
 
         return _status
 
-    def _mouse_event(self, x, y, name = 'b1c'):
+    def _mouse_event(self, x, y, name='b1c'):
         pyatspi.Registry.generateMouseEvent(x, y, name)
 
         return 1

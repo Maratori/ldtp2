@@ -19,6 +19,7 @@ See 'COPYING' in the source distribution for more information.
 Headers in this file shall remain intact.
 """
 
+
 class SignalParent:
     def __init__(self, parentpid):
         from twisted.internet import reactor
@@ -36,6 +37,8 @@ class SignalParent:
 
 
 from .xmlrpc_daemon import XMLRPCLdtpd
+
+
 def main(port=4118, parentpid=None, XMLRPCLdtpdFactory=lambda: XMLRPCLdtpd()):
     import os
     os.environ['NO_GAIL'] = '1'
@@ -48,10 +51,10 @@ def main(port=4118, parentpid=None, XMLRPCLdtpdFactory=lambda: XMLRPCLdtpd()):
     except:
         pass
     if not gtkVersion or gtkVersion == '2.0':
-       # As per Ubuntu 11.10, twisted glib2reactor
-       # works with gtk2, which fails with gtk3
-       from twisted.internet import glib2reactor
-       glib2reactor.install()
+        # As per Ubuntu 11.10, twisted glib2reactor
+        # works with gtk2, which fails with gtk3
+        from twisted.internet import glib2reactor
+        glib2reactor.install()
     elif gtkVersion >= '3.0':
         try:
             # Exist in Ubuntu 12.04, but not on

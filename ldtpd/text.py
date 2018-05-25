@@ -20,10 +20,13 @@ Headers in this file shall remain intact.
 """
 
 import re
-import pyatspi 
-from .utils import Utils
-from .server_exception import LdtpServerException
+
+import pyatspi
+
 from .keypress_actions import KeyComboAction, KeyPressAction, KeyReleaseAction
+from .server_exception import LdtpServerException
+from .utils import Utils
+
 
 class Text(Utils):
     def generatekeyevent(self, data):
@@ -38,7 +41,7 @@ class Text(Utils):
         @rtype: integer
         """
 
-        key_combo_action=KeyComboAction(data)
+        key_combo_action = KeyComboAction(data)
         key_combo_action()
 
         return 1
@@ -54,7 +57,7 @@ class Text(Utils):
         @rtype: integer
         """
 
-        key_press_action=KeyPressAction(key_name=data)
+        key_press_action = KeyPressAction(key_name=data)
         key_press_action()
 
         return 1
@@ -70,7 +73,7 @@ class Text(Utils):
         @rtype: integer
         """
 
-        key_release_action=KeyReleaseAction(key_name=data)
+        key_release_action = KeyReleaseAction(key_name=data)
         key_release_action()
 
         return 1
@@ -92,19 +95,19 @@ class Text(Utils):
         @rtype: integer
         """
         if object_name:
-            obj=self._get_object(window_name, object_name,
-                                 obj_type=['combo_box', 'text', 'entry',
-                                           'paragraph', 'password_text', 'editbar'])
+            obj = self._get_object(window_name, object_name,
+                                   obj_type=['combo_box', 'text', 'entry',
+                                             'paragraph', 'password_text', 'editbar'])
             self._grab_focus(obj)
         if data:
             for gui in self._list_guis():
                 if self._match_name_to_acc(window_name, gui):
                     self._grab_focus(gui)
-            text=data
+            text = data
         else:
-            text=window_name # TODO: Major hack, this is a bad API choice
+            text = window_name  # TODO: Major hack, this is a bad API choice
 
-        key_combo_action=KeyComboAction(text)
+        key_combo_action = KeyComboAction(text)
         key_combo_action()
 
         return 1
@@ -125,17 +128,17 @@ class Text(Utils):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name,
-                             obj_type=['combo_box', 'text', 'entry',
-                                       'paragraph', 'password_text', 'editbar'])
+        obj = self._get_object(window_name, object_name,
+                               obj_type=['combo_box', 'text', 'entry',
+                                         'paragraph', 'password_text', 'editbar'])
         self._grab_focus(obj)
         if obj.getRole() == pyatspi.ROLE_COMBO_BOX:
-            obj=self._get_child_object_type(obj, pyatspi.ROLE_TEXT)
+            obj = self._get_child_object_type(obj, pyatspi.ROLE_TEXT)
             if not obj:
                 raise LdtpServerException('Unable to get combo box children')
 
         try:
-            texti=obj.queryEditableText()
+            texti = obj.queryEditableText()
         except NotImplementedError:
             raise LdtpServerException('Text cannot be entered into object.')
 
@@ -160,14 +163,14 @@ class Text(Utils):
         @return: text on success.
         @rtype: string
         """
-        obj=self._get_object(window_name, object_name,
-                             obj_type=['combo_box', 'text', 'entry', 'label',
-                                       'paragraph', 'password_text', 'editbar',
-                                       'terminal'])
+        obj = self._get_object(window_name, object_name,
+                               obj_type=['combo_box', 'text', 'entry', 'label',
+                                         'paragraph', 'password_text', 'editbar',
+                                         'terminal'])
         if obj.getRole() == pyatspi.ROLE_COMBO_BOX:
-            child_obj=self._get_combo_child_object_type(obj)
+            child_obj = self._get_combo_child_object_type(obj)
             if child_obj.getRole() == pyatspi.ROLE_LIST:
-                obj=self._get_child_object_type(obj, pyatspi.ROLE_TEXT)
+                obj = self._get_child_object_type(obj, pyatspi.ROLE_TEXT)
                 if not obj:
                     raise LdtpServerException('Unable to get text object')
             elif child_obj.getRole() == pyatspi.ROLE_MENU:
@@ -175,20 +178,20 @@ class Text(Utils):
             else:
                 raise LdtpServerException('Unable to get combo box child object')
         try:
-            texti=obj.queryText()
+            texti = obj.queryText()
         except NotImplementedError:
             raise LdtpServerException('Text cannot be retrieved from object %s.' % obj)
 
         if startPosition and startPosition > 0:
-            start=startPosition
+            start = startPosition
         else:
-            start=0
+            start = 0
         if endPosition and endPosition > start:
-            end=endPosition
+            end = endPosition
         else:
-            end=texti.characterCount
+            end = texti.characterCount
 
-        text=texti.getText(start, end)
+        text = texti.getText(start, end)
         text
 
     def inserttext(self, window_name, object_name, position, data):
@@ -209,17 +212,17 @@ class Text(Utils):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name,
-                             obj_type=['combo_box', 'text', 'entry',
-                                       'paragraph', 'password_text', 'editbar'])
+        obj = self._get_object(window_name, object_name,
+                               obj_type=['combo_box', 'text', 'entry',
+                                         'paragraph', 'password_text', 'editbar'])
         self._grab_focus(obj)
         if obj.getRole() == pyatspi.ROLE_COMBO_BOX:
-            obj=self._get_child_object_type(obj, pyatspi.ROLE_TEXT)
+            obj = self._get_child_object_type(obj, pyatspi.ROLE_TEXT)
             if not obj:
                 raise LdtpServerException('Unable to get combo box children')
 
         try:
-            texti=obj.queryEditableText()
+            texti = obj.queryEditableText()
         except NotImplementedError:
             raise LdtpServerException('Text cannot be entered into object.')
 
@@ -287,7 +290,7 @@ class Text(Utils):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name)
+        obj = self._get_object(window_name, object_name)
         self._grab_focus(obj)
 
         self._click_object(obj, 'activate')
@@ -310,17 +313,17 @@ class Text(Utils):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name,
-                             obj_type=['combo_box', 'text', 'entry',
-                                       'paragraph', 'password_text', 'editbar'])
+        obj = self._get_object(window_name, object_name,
+                               obj_type=['combo_box', 'text', 'entry',
+                                         'paragraph', 'password_text', 'editbar'])
         self._grab_focus(obj)
         if obj.getRole() == pyatspi.ROLE_COMBO_BOX:
-            obj=self._get_child_object_type(obj, pyatspi.ROLE_TEXT)
+            obj = self._get_child_object_type(obj, pyatspi.ROLE_TEXT)
             if not obj:
                 raise LdtpServerException('Unable to get combo box children')
 
         try:
-            texti=obj.queryEditableText()
+            texti = obj.queryEditableText()
         except NotImplementedError:
             raise LdtpServerException('Text cannot be entered into object.')
 
@@ -343,9 +346,9 @@ class Text(Utils):
         @rtype: integer
         """
         try:
-            obj=self._get_object(window_name, object_name, False,
-                                 obj_type=['combo_box', 'text', 'entry',
-                                           'paragraph', 'password_text', 'editbar'])
+            obj = self._get_object(window_name, object_name, False,
+                                   obj_type=['combo_box', 'text', 'entry',
+                                             'paragraph', 'password_text', 'editbar'])
             return int(self._check_state(obj, pyatspi.STATE_EDITABLE))
         except:
             return 0
@@ -364,12 +367,12 @@ class Text(Utils):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name,
-                             obj_type=['combo_box', 'text', 'entry',
-                                       'paragraph', 'password_text', 'editbar'])
+        obj = self._get_object(window_name, object_name,
+                               obj_type=['combo_box', 'text', 'entry',
+                                         'paragraph', 'password_text', 'editbar'])
 
         try:
-            texti=obj.queryText()
+            texti = obj.queryText()
         except NotImplementedError:
             raise LdtpServerException('Unable to get text.')
 
@@ -389,12 +392,12 @@ class Text(Utils):
         @return: Cursor position on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name,
-                             obj_type=['combo_box', 'text', 'entry',
-                                       'paragraph', 'password_text', 'editbar'])
+        obj = self._get_object(window_name, object_name,
+                               obj_type=['combo_box', 'text', 'entry',
+                                         'paragraph', 'password_text', 'editbar'])
 
         try:
-            texti=obj.queryText()
+            texti = obj.queryText()
         except NotImplementedError:
             raise LdtpServerException('Unable to get text.')
 
@@ -416,13 +419,13 @@ class Text(Utils):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name,
-                             obj_type=['combo_box', 'text', 'entry',
-                                       'paragraph', 'password_text', 'editbar'])
+        obj = self._get_object(window_name, object_name,
+                               obj_type=['combo_box', 'text', 'entry',
+                                         'paragraph', 'password_text', 'editbar'])
         self._grab_focus(obj)
 
         try:
-            texti=obj.queryText()
+            texti = obj.queryText()
         except NotImplementedError:
             raise LdtpServerException('Unable to get text.')
 
@@ -448,21 +451,21 @@ class Text(Utils):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name,
-                             obj_type=['combo_box', 'text', 'entry',
-                                       'paragraph', 'password_text', 'editbar'])
+        obj = self._get_object(window_name, object_name,
+                               obj_type=['combo_box', 'text', 'entry',
+                                         'paragraph', 'password_text', 'editbar'])
         self._grab_focus(obj)
 
         try:
-            texti=obj.queryEditableText()
+            texti = obj.queryEditableText()
         except NotImplementedError:
             raise LdtpServerException('Unable to get editable text.')
 
-        size=texti.characterCount
+        size = texti.characterCount
         if end_position == -1 or end_position > size:
-            end_position=size
+            end_position = size
         if start_position < 0:
-            start_position=0
+            start_position = 0
 
         texti.cutText(start_position, end_position)
 
@@ -487,21 +490,21 @@ class Text(Utils):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name,
-                             obj_type=['combo_box', 'text', 'entry',
-                                       'paragraph', 'password_text', 'editbar'])
+        obj = self._get_object(window_name, object_name,
+                               obj_type=['combo_box', 'text', 'entry',
+                                         'paragraph', 'password_text', 'editbar'])
         self._grab_focus(obj)
 
         try:
-            texti=obj.queryEditableText()
+            texti = obj.queryEditableText()
         except NotImplementedError:
             raise LdtpServerException('Unable to get editable text.')
 
-        size=texti.characterCount
+        size = texti.characterCount
         if end_position == -1 or end_position > size:
-            end_position=size
+            end_position = size
         if start_position < 0:
-            start_position=0
+            start_position = 0
 
         texti.copyText(start_position, end_position)
 
@@ -526,21 +529,21 @@ class Text(Utils):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name,
-                             obj_type=['combo_box', 'text', 'entry',
-                                       'paragraph', 'password_text', 'editbar'])
+        obj = self._get_object(window_name, object_name,
+                               obj_type=['combo_box', 'text', 'entry',
+                                         'paragraph', 'password_text', 'editbar'])
         self._grab_focus(obj)
 
         try:
-            texti=obj.queryEditableText()
+            texti = obj.queryEditableText()
         except NotImplementedError:
             raise LdtpServerException('Unable to get editable text.')
 
-        size=texti.characterCount
+        size = texti.characterCount
         if end_position == -1 or end_position > size:
-            end_position=size
+            end_position = size
         if start_position < 0:
-            start_position=0
+            start_position = 0
 
         texti.deleteText(start_position, end_position)
 
@@ -562,21 +565,21 @@ class Text(Utils):
         @return: 1 on success.
         @rtype: integer
         """
-        obj=self._get_object(window_name, object_name,
-                             obj_type=['combo_box', 'text', 'entry',
-                                       'paragraph', 'password_text', 'editbar'])
+        obj = self._get_object(window_name, object_name,
+                               obj_type=['combo_box', 'text', 'entry',
+                                         'paragraph', 'password_text', 'editbar'])
         self._grab_focus(obj)
 
         try:
-            texti=obj.queryEditableText()
+            texti = obj.queryEditableText()
         except NotImplementedError:
             raise LdtpServerException('Unable to get editable text.')
 
-        size=texti.characterCount
+        size = texti.characterCount
         if position > size:
-            position=size
+            position = size
         if position < 0:
-            position=0
+            position = 0
 
         texti.pasteText(position)
 

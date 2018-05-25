@@ -2,12 +2,12 @@
 
 # This file is part of ATOMac.
 
-#@author: Eitan Isaacson <eitan@ascender.com>
-#@author: Nagappan Alagappan <nagappan@gmail.com>
-#@copyright: Copyright (c) 2009 Eitan Isaacson
-#@copyright: Copyright (c) 2009-12 Nagappan Alagappan
+# @author: Eitan Isaacson <eitan@ascender.com>
+# @author: Nagappan Alagappan <nagappan@gmail.com>
+# @copyright: Copyright (c) 2009 Eitan Isaacson
+# @copyright: Copyright (c) 2009-12 Nagappan Alagappan
 
-#http://ldtp.freedesktop.org
+# http://ldtp.freedesktop.org
 
 # ATOMac is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,7 @@
 """Python LDTP exception"""
 
 ERROR_CODE = 123
+
 
 class LdtpExecutionError(Exception):
     pass

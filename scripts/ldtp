@@ -20,33 +20,36 @@ Headers in this file shall remain intact.
 
 import os
 import sys
-import ldtpd
 from optparse import OptionParser
 
-def parse_cmd_line_option():
-   usage = "usage: %prog [options]"
-   parser = OptionParser(usage)
-   parser.add_option("-V", "--version", dest = "version",
-                     action = "store_true", help = "LDTP engine version",
-                     default = False)
-   parser.add_option("-v", "--verbose", dest = "verbose",
-                     action = "store_true", help = "Verbose mode",
-                     default = False)
-   parser.add_option("-p", "--port", dest = "port", type="int",
-                     help = "Port to listen", default = 4118)
+import ldtpd
 
-   (options, args) = parser.parse_args()
-   if options.version:
-      # Print version info and exit
-      print('ldtp-3.5.0')
-      sys.exit(0)
-   if options.verbose:
-      # Set verbose flag
-      os.environ['LDTP_DEBUG'] = '2'
-   return options
+
+def parse_cmd_line_option():
+    usage = "usage: %prog [options]"
+    parser = OptionParser(usage)
+    parser.add_option("-V", "--version", dest="version",
+                      action="store_true", help="LDTP engine version",
+                      default=False)
+    parser.add_option("-v", "--verbose", dest="verbose",
+                      action="store_true", help="Verbose mode",
+                      default=False)
+    parser.add_option("-p", "--port", dest="port", type="int",
+                      help="Port to listen", default=4118)
+
+    (options, args) = parser.parse_args()
+    if options.version:
+        # Print version info and exit
+        print('ldtp-3.5.0')
+        sys.exit(0)
+    if options.verbose:
+        # Set verbose flag
+        os.environ['LDTP_DEBUG'] = '2'
+    return options
+
 
 options = parse_cmd_line_option()
 try:
-   ldtpd.main(options.port)
+    ldtpd.main(options.port)
 except KeyboardInterrupt:
-   pass
+    pass

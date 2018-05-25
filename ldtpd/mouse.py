@@ -20,15 +20,16 @@ Headers in this file shall remain intact.
 """
 
 import time
-import pyatspi 
+
 from .utils import Utils
-from .server_exception import LdtpServerException
+
 
 class Mouse(Utils):
     """
     Mouse related events
     """
-    def generatemouseevent(self, x, y, eventType = 'b1c'):
+
+    def generatemouseevent(self, x, y, eventType='b1c'):
         """
         Generate mouse event on x, y co-ordinates.
         
@@ -136,7 +137,7 @@ class Mouse(Utils):
                                  _coordinates.y + _coordinates.height / 2,
                                  'b1d')
 
-    def simulatemousemove(self, source_x, source_y, dest_x, dest_y, delay = 0.0):
+    def simulatemousemove(self, source_x, source_y, dest_x, dest_y, delay=0.0):
         """
         @param source_x: Source X
         @type source_x: integer
@@ -154,13 +155,13 @@ class Mouse(Utils):
         """
         size = self._get_geometry()
         if (source_x < size[0] or source_y < size[1] or \
-                dest_x > size[2] or dest_y > size[3]) or \
+            dest_x > size[2] or dest_y > size[3]) or \
                 (source_x > size[2] or source_y > size[3] or \
-                     dest_x < size[0] or dest_y < size[1]):
+                 dest_x < size[0] or dest_y < size[1]):
             return 0
 
-        x_flag = False # Iterated x ?
-        y_flag = False # Iterated y ?
+        x_flag = False  # Iterated x ?
+        y_flag = False  # Iterated y ?
         while True:
             if not x_flag:
                 if source_x > dest_x:

@@ -19,11 +19,11 @@ Headers in this file shall remain intact.
 
 from ldtp import *
 
-s=getobjectsize('pane0', 'btnNotificationChevron')
-generatemouseevent(s[0] + s[2]/2, s[1] + s[3]/2, 'b1c')
+s = getobjectsize('pane0', 'btnNotificationChevron')
+generatemouseevent(s[0] + s[2] / 2, s[1] + s[3] / 2, 'b1c')
 wait(2)
-s1=getobjectsize('paneNotificationOverflow', 'btnMcAffee*')
-generatemouseevent(s1[0] + s1[2]/2, s1[1] + s1[3]/2, 'b3c')
+s1 = getobjectsize('paneNotificationOverflow', 'btnMcAffee*')
+generatemouseevent(s1[0] + s1[2] / 2, s1[1] + s1[3] / 2, 'b3c')
 wait(2)
 getobjectlist('mnuContext')
 selectmenuitem('mnuContext', 'mnuVirusScanConsole')

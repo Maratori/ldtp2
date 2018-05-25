@@ -18,6 +18,7 @@ Headers in this file shall remain intact.
 """
 
 from ldtp import *
+
 # Executed this with Ubuntu 10.04 without Unity
 
 # I created Test folder in desktop and made sure its visible

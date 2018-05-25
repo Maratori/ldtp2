@@ -17,9 +17,11 @@ See "COPYING" in the source distribution for more information.
 Headers in this file shall remain intact.
 '''
 
-import ldtp
-from time import sleep
 import unittest
+from time import sleep
+
+import ldtp
+
 
 class WidgetTestCase(unittest.TestCase):
     def setUp(self):
@@ -57,6 +59,7 @@ class WidgetTestCase(unittest.TestCase):
         ldtp.click('frmCalculator*', 'btnNumeric2')
         sleep(0.5)
         ldtp.click('frmCalculator*', 'btnCalculateresult')
+
 
 if __name__ == '__main__':
     unittest.main()

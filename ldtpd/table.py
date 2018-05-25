@@ -20,10 +20,13 @@ Headers in this file shall remain intact.
 """
 import re
 import time
-import pyatspi 
-from .utils import Utils
-from .server_exception import LdtpServerException
+
+import pyatspi
+
 from .keypress_actions import KeyPressAction, KeyReleaseAction
+from .server_exception import LdtpServerException
+from .utils import Utils
+
 
 class Table(Utils):
     def getrowcount(self, window_name, object_name):
@@ -178,7 +181,7 @@ class Table(Utils):
         except NotImplementedError:
             raise LdtpServerException('Object not table type.')
 
-        key_press_action=KeyPressAction(key_name="<ctrl>")
+        key_press_action = KeyPressAction(key_name="<ctrl>")
         key_press_action()
         try:
             for row_text in row_text_list:
@@ -204,8 +207,8 @@ class Table(Utils):
                                         size = self._get_size(cell)
                                         if pyatspi.state.STATE_SELECTED not \
                                                 in cell.getState().getStates():
-                                            self._mouse_event(size[0] + size[2]/2,
-                                                              size[1] + size[3]/2)
+                                            self._mouse_event(size[0] + size[2] / 2,
+                                                              size[1] + size[3] / 2)
                                         else:
                                             # Table Cell already selected
                                             pass
@@ -219,13 +222,13 @@ class Table(Utils):
                             size = self._get_size(cell)
                             if pyatspi.state.STATE_SELECTED not \
                                     in cell.getState().getStates():
-                                self._mouse_event(size[0] + size[2]/2,
-                                                  size[1] + size[3]/2)
+                                self._mouse_event(size[0] + size[2] / 2,
+                                                  size[1] + size[3] / 2)
                             selected_rows = True
                 if not selected_rows:
                     raise LdtpServerException('Unable to select row: %s' % row_text)
         finally:
-            key_release_action=KeyReleaseAction(key_name="<ctrl>")
+            key_release_action = KeyReleaseAction(key_name="<ctrl>")
             key_release_action()
         if selected_rows:
             return 1
@@ -258,7 +261,7 @@ class Table(Utils):
         except NotImplementedError:
             raise LdtpServerException('Object not table type.')
 
-        key_press_action=KeyPressAction(key_name="<ctrl>")
+        key_press_action = KeyPressAction(key_name="<ctrl>")
         key_press_action()
         try:
             for row_text in row_text_list:
@@ -284,8 +287,8 @@ class Table(Utils):
                                         size = self._get_size(cell)
                                         if pyatspi.state.STATE_SELECTED \
                                                 in cell.getState().getStates():
-                                            self._mouse_event(size[0] + size[2]/2,
-                                                              size[1] + size[3]/2)
+                                            self._mouse_event(size[0] + size[2] / 2,
+                                                              size[1] + size[3] / 2)
                                         else:
                                             # Table Cell wasn't selected
                                             pass
@@ -299,13 +302,13 @@ class Table(Utils):
                             size = self._get_size(cell)
                             if pyatspi.state.STATE_SELECTED \
                                     in cell.getState().getStates():
-                                self._mouse_event(size[0] + size[2]/2,
-                                                  size[1] + size[3]/2)
+                                self._mouse_event(size[0] + size[2] / 2,
+                                                  size[1] + size[3] / 2)
                             unselected_rows = True
                 if not unselected_rows:
                     raise LdtpServerException('Unable to unselect row: %s' % row_text)
         finally:
-            key_release_action=KeyReleaseAction(key_name="<ctrl>")
+            key_release_action = KeyReleaseAction(key_name="<ctrl>")
             key_release_action()
         if unselected_rows:
             return 1
@@ -367,7 +370,7 @@ class Table(Utils):
         return 1
 
     def setcellvalue(self, window_name, object_name, row_index,
-                     column = 0, data = None):
+                     column=0, data=None):
         """
         Set cell value
 
@@ -449,7 +452,7 @@ class Table(Utils):
                         return int(texti.setTextContents(data.encode('utf-8')))
         raise LdtpServerException('Text cannot be entered into object.')
 
-    def getcellvalue(self, window_name, object_name, row_index, column = 0):
+    def getcellvalue(self, window_name, object_name, row_index, column=0):
         """
         Get cell value
 
@@ -499,7 +502,7 @@ class Table(Utils):
             raise LdtpServerException('Unable to get row text')
         return name
 
-    def getcellsize(self, window_name, object_name, row_index, column = 0):
+    def getcellsize(self, window_name, object_name, row_index, column=0):
         """
         Get cell size
 
@@ -517,10 +520,10 @@ class Table(Utils):
         @return: x, y, width, height on success.
         @rtype: list
         """
-        obj=self._get_object(window_name, object_name)
+        obj = self._get_object(window_name, object_name)
 
-        cell=self._get_accessible_at_row_column(obj, row_index, column)
-        current_cell=None
+        cell = self._get_accessible_at_row_column(obj, row_index, column)
+        current_cell = None
         if cell.childCount > 0:
             flag = False
             try:
@@ -536,20 +539,20 @@ class Table(Utils):
                         texti = child.queryText()
                     except NotImplementedError:
                         continue
-                    current_cell=child
+                    current_cell = child
                     self._grab_focus(cell)
                     break
             finally:
                 if not flag:
                     self._handle_table_cell = False
         else:
-            current_cell=cell
+            current_cell = cell
             self._grab_focus(cell)
         if not current_cell:
             raise LdtpServerException('Unable to find row and/or column')
-        _coordinates=self._get_size(current_cell)
+        _coordinates = self._get_size(current_cell)
         return [_coordinates.x, _coordinates.y, \
-                    _coordinates.width, _coordinates.height]
+                _coordinates.width, _coordinates.height]
 
     def rightclick(self, window_name, object_name, row_text):
         """
@@ -605,10 +608,10 @@ class Table(Utils):
                     self._mouse_event(size.x + size.width / 2,
                                       size.y + size.height / 2, 'b3c')
                     return 1
-                
+
         raise LdtpServerException('Unable to right click row: %s' % row_text)
 
-    def checkrow(self, window_name, object_name, row_index, column = 0):
+    def checkrow(self, window_name, object_name, row_index, column=0):
         """
         Check row
 
@@ -666,7 +669,7 @@ class Table(Utils):
             raise LdtpServerException('Unable to check row')
         return 1
 
-    def expandtablecell(self, window_name, object_name, row_index, column = 0):
+    def expandtablecell(self, window_name, object_name, row_index, column=0):
         """
         Expand or contract table cell
 
@@ -722,7 +725,7 @@ class Table(Utils):
             raise LdtpServerException('Unable to check row')
         return 1
 
-    def uncheckrow(self, window_name, object_name, row_index, column = 0):
+    def uncheckrow(self, window_name, object_name, row_index, column=0):
         """
         Check row
 
@@ -983,7 +986,7 @@ class Table(Utils):
             return row_index
         except:
             raise LdtpServerException('Unable to access row index: %d column: %d' % \
-                                          row_index, col_index) 
+                                      row_index, col_index)
 
     def verifytablecell(self, window_name, object_name, row_index,
                         column_index, row_text):
@@ -1014,7 +1017,7 @@ class Table(Utils):
             return 0
 
     def doesrowexist(self, window_name, object_name, row_text,
-                     partial_match = False):
+                     partial_match=False):
         """
         Verify table cell value with given text
 
@@ -1047,7 +1050,7 @@ class Table(Utils):
                     return row_text == itext.getText(0, -1)
 
             results = pyatspi.findDescendant(obj, _searchString)
-        
+
             return int(bool(results))
         except:
             return 0

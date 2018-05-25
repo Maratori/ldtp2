@@ -20,8 +20,11 @@ Headers in this file shall remain intact.
 """
 
 import re
-import pyatspi 
+
+import pyatspi
+
 from .utils import Utils
+
 
 class Menu(Utils):
     def selectmenuitem(self, window_name, object_name):
@@ -48,7 +51,7 @@ class Menu(Utils):
         return 1
 
     def doesmenuitemexist(self, window_name, object_name,
-                          strict_hierarchy = False):
+                          strict_hierarchy=False):
         """
         Check a menu item exist.
 

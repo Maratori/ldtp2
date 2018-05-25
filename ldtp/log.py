@@ -19,8 +19,8 @@ See 'COPYING' in the source distribution for more information.
 Headers in this file shall remain intact.
 """
 
-from os import environ as env
 import logging
+from os import environ as env
 
 AREA = 'ldtp.client'
 ENV_LOG_LEVEL = 'LDTP_LOG_LEVEL'
@@ -31,6 +31,7 @@ ENV_LOG_STYLE = 'LDTP_LOG_STYLE'
 class noParsingFilter(logging.Filter):
     def filter(self, record):
         return record.getMessage().rfind('getlastlog()')
+
 
 log_level = getattr(logging, env.get(ENV_LOG_LEVEL, 'NOTSET'), logging.NOTSET)
 

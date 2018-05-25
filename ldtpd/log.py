@@ -19,8 +19,8 @@ See 'COPYING' in the source distribution for more information.
 Headers in this file shall remain intact.
 """
 
-from os import environ as env
 import logging
+from os import environ as env
 
 AREA = 'ldtp.server'
 ENV_LOG_LEVEL = 'LDTPD_LOG_LEVEL'

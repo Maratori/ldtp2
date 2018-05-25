@@ -22,7 +22,9 @@ Headers in this file shall remain intact.
 import os
 import re
 import time
+
 from twisted.web import xmlrpc
+
 try:
     import xmlrpclib
 except ImportError:
@@ -39,24 +41,26 @@ else:
 _ldtp_debug = os.environ.get('LDTP_DEBUG', None)
 _ldtp_debug_file = os.environ.get('LDTP_DEBUG_FILE', None)
 
+
 class XMLRPCLdtpd(Ldtpd, xmlrpc.XMLRPC, object):
     def __new__(cls, *args, **kwargs):
         for symbol in dir(Ldtpd):
-            if symbol.startswith('_'): 
+            if symbol.startswith('_'):
                 continue
             obj = getattr(cls, symbol)
             if not callable(obj):
                 continue
-            setattr(cls, 'xmlrpc_'+symbol, obj)
+            setattr(cls, 'xmlrpc_' + symbol, obj)
         return object.__new__(cls, *args, **kwargs)
 
     def __init__(self):
-        xmlrpc.XMLRPC.__init__(self, allowNone = True)
+        xmlrpc.XMLRPC.__init__(self, allowNone=True)
         Ldtpd.__init__(self)
 
     def _listFunctions(self):
         return [a[7:] for a in \
-                  filter(lambda x: x.startswith('xmlrpc_'), dir(self))]
+                filter(lambda x: x.startswith('xmlrpc_'), dir(self))]
+
     # Starting twisted 11.1
     listProcedures = _listFunctions
 
@@ -107,10 +111,10 @@ class XMLRPCLdtpd(Ldtpd, xmlrpc.XMLRPC, object):
         else:
             try:
                 if hasattr(self, 'lookupProcedure'):
-                   # Starting twisted 11.1
-                   function = self.lookupProcedure(functionPath)
+                    # Starting twisted 11.1
+                    function = self.lookupProcedure(functionPath)
                 else:
-                   function = self._getFunction(functionPath)
+                    function = self._getFunction(functionPath)
             except xmlrpc.Fault as f:
                 self._cbRender(f, request)
             else:
@@ -124,8 +128,8 @@ class XMLRPCLdtpd(Ldtpd, xmlrpc.XMLRPC, object):
                     with open(_ldtp_debug_file, "a") as fp:
                         fp.write(debug_st)
                 xmlrpc.defer.maybeDeferred(function, *args,
-                                           **kwargs).\
-                                           addErrback(self._ebRender).\
-                                           addCallback(self._cbRender,
-                                                       request)
+                                           **kwargs). \
+                    addErrback(self._ebRender). \
+                    addCallback(self._cbRender,
+                                request)
         return xmlrpc.server.NOT_DONE_YET

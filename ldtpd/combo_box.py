@@ -19,9 +19,11 @@ See 'COPYING' in the source distribution for more information.
 Headers in this file shall remain intact.
 """
 
-import pyatspi 
-from .utils import Utils
+import pyatspi
+
 from .server_exception import LdtpServerException
+from .utils import Utils
+
 
 class LayeredPane(Utils):
     def _lp_selectitem(self, obj, item_name):
@@ -283,6 +285,7 @@ class LayeredPane(Utils):
         except:
             raise LdtpServerException('Unable to select all item')
 
+
 class ComboBox(LayeredPane):
     def selectitem(self, window_name, object_name, item_name):
         """
@@ -333,7 +336,7 @@ class ComboBox(LayeredPane):
                             # In Firefox Preferences: Action to select
                             # list item has empty action
                             # If click action is available, then do it
-                            self._click_object(child, action = 'click|')
+                            self._click_object(child, action='click|')
                         except:
                             # Incase of exception, just ignore it
                             pass
@@ -658,7 +661,7 @@ class ComboBox(LayeredPane):
         @rtype: string
         """
         obj = self._get_object(window_name, object_name,
-                               obj_type = ["combo_box"])
+                               obj_type=["combo_box"])
         self._grab_focus(obj)
 
         child_obj = self._get_child_object_type(obj, pyatspi.ROLE_TEXT)
@@ -676,5 +679,5 @@ class ComboBox(LayeredPane):
             raise LdtpServerException("Unable to get currently selected item")
         # Return label by value, which is actually selected one
         # Preference to label_by rather than label
-        text=_ldtpize_accessible_name[2] or _ldtpize_accessible_name[1]
+        text = _ldtpize_accessible_name[2] or _ldtpize_accessible_name[1]
         text
