@@ -96,12 +96,12 @@ class Transport(xmlrpclib.Transport):
             self._daemon = True
         elif platform.mac_ver()[0] != '':
             pycmd = 'import atomac.ldtpd; atomac.ldtpd.main(parentpid=%s)' % pid
-            self._daemon = os.spawnlp(os.P_NOWAIT, 'python',
-                                      'python', '-c', pycmd)
+            self._daemon = os.spawnlp(os.P_NOWAIT, sys.executable,
+                                      sys.executable, '-c', pycmd)
         else:
             pycmd = 'import ldtpd; ldtpd.main(parentpid=%s)' % pid
-            self._daemon = os.spawnlp(os.P_NOWAIT, 'python',
-                                      'python', '-c', pycmd)
+            self._daemon = os.spawnlp(os.P_NOWAIT, sys.executable,
+                                      sys.executable, '-c', pycmd)
 
     # http://www.itkovian.net/base/transport-class-for-pythons-xml-rpc-lib/
     ##
